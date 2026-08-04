@@ -27,7 +27,7 @@ design-language・モックを扱うのはこの skill なので、実質いつ�
 ## 対象 product を決める（起動時に必ず・concepts §2）
 
 spec と同じ手順で**どの product の design の話か**を先に決める:
-`docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob して product を列挙し、
+`docs/specs/overview.md` ＋ `packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob して product を列挙し、
 引数・文脈から対象を決め（既定は root product）、**一行宣言してから動く**。
 
 ## ファイル構造

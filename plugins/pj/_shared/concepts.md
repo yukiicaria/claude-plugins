@@ -40,15 +40,24 @@ pj が回す単位は **product**。product は spec + design + build を1周持
 
 ### product の発見（規約 — マニフェストを持たない）
 
-**`docs/specs/overview.md` を持つディレクトリが product。** 探索は次の2箇所だけ:
+**`docs/specs/overview.md` を持つディレクトリが product。** 探索は次の3箇所:
 
 ```
-docs/specs/overview.md              root product
-packages/*/docs/specs/overview.md   package product（1階層のみ）
+docs/specs/overview.md                root product
+packages/*/docs/specs/overview.md     package product
+packages/*/*/docs/specs/overview.md   グループ配下の package product
 ```
 
-`packages/a/packages/b` のような入れ子は**探索しない＝作らない**（glob と依存グラフが際限なく複雑になる）。
-別途マニフェストは持たない（二重管理は必ずズレる。**ファイルの存在が唯一の事実**）。
+- **グループ用の中間ディレクトリを1段だけ挟んでよい**（`packages/<group>/<name>/`）。
+  package が増えてきたときに束ねるため。**グループ自身は product ではない**
+  （`docs/specs/overview.md` を持たないので探索に引っかからない。ただのフォルダ）。
+- **product の中に product を置かない。** `packages/a/packages/b` のように product の配下へ
+  別の product をぶら下げる形は作らない —— 依存グラフと切り出しの単位が曖昧になる。
+  グループは product ではないので、これに当たらない。
+- **深さは packages/ 配下2段まで。** それ以上は glob と依存グラフが際限なく複雑になる。
+- 別途マニフェストは持たない（二重管理は必ずズレる。**ファイルの存在が唯一の事実**）。
+- **グループ化は任意。** 数が少ないうちはフラットでよく、深さが混在していても構わない
+  （探索は両方を見る）。先回りしてグループを作らない。
 
 ### 依存（depend）と準拠（conform）は別物
 

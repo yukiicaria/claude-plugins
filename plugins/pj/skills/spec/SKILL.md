@@ -25,7 +25,7 @@ design レイヤー（`/pj:design` → `docs/design/`）の仕事。「何を作
 
 pj の単位は **product**（app も package も product）。**どの product の spec の話かを最初に決める。**
 
-1. **product を列挙する**: `docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob
+1. **product を列挙する**: `docs/specs/overview.md` ＋ `packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob
    （これが product の定義。マニフェストは無い）。
 2. **対象を決める**: 引数に product 名／`packages/<name>` があればそれ。無ければ **root product** を既定にする。
    ただし直近の文脈が特定 package の話なら、それを候補として**一言だけ確認**する。

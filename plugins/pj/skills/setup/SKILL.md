@@ -144,9 +144,14 @@ UI を持たない（CLI 等）なら**スキップ**し、design-language は N
 ### F-1. 事前確認
 
 1. **root product であることを確認**（`docs/specs/overview.md` が repo 直下にある）。
-   `packages/` の中から呼ばれていたら「package の中に package は作らない」と伝えて止める（concepts §2）。
-2. **名前の重複チェック**: `packages/<name>/` が既にあれば止めて既存を案内する。
-3. **名前が feature 名と衝突していないか**確認する（concepts §4 の repo 内一意）。衝突していたら
+   **既存 product の配下から呼ばれていたら止める**（「product の中に product は作らない」・concepts §2）。
+2. **グループを使うか決める**。`<name>` に `/` が含まれていたら
+   `packages/<group>/<name>/` に作る（例: `/pj:setup package organization/evaluation`）。
+   - **グループ自身は product ではない**（`docs/specs/overview.md` を置かない。ただのフォルダ）
+   - 深さは `packages/` 配下2段まで
+   - **先回りしてグループを作らない。** 数が少ないうちはフラットでよい
+3. **名前の重複チェック**: `packages/<name>/` が既にあれば止めて既存を案内する。
+4. **名前が feature 名と衝突していないか**確認する（concepts §4 の repo 内一意）。衝突していたら
    どちらを改名するか一言確認する。
 
 ### F-2. 器を作る

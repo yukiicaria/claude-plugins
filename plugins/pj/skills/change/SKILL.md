@@ -35,7 +35,7 @@ pj で作ったプロジェクトを「直したい」ときの**唯一の入口
 
 **層を決める前に「どの product の話か」を決める。** ここが決まらないと直す先のファイルが決まらない。
 
-1. `docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob して product を列挙する。
+1. `docs/specs/overview.md` ＋ `packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob して product を列挙する（グループ配下も見る・concepts §2）。
 2. 依頼文の対象・`git status` に出たパス・直近の文脈から対象 product を決める。曖昧なら一言だけ確認。
 3. **複数 product にまたがるなら、それ自体を宣言する**（「これは workflow と app の両方に効きます」）。
    またがる変更は**上流の product から直す**（package → それを使う app の順。逆にすると app を2回直す）。

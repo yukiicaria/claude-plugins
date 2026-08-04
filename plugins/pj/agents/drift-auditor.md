@@ -24,7 +24,8 @@ model: inherit
 ## product 境界（鎖より先に見る）
 
 pj の単位は **product**（app も package も product。concepts §2）。`docs/specs/overview.md` を持つ
-ディレクトリが product で、探索は **repo 直下**と **`packages/*`** の2箇所だけ。
+ディレクトリが product で、探索は **repo 直下**・**`packages/*`**・**`packages/*/*`**（グループ配下）。
+グループ用の中間ディレクトリ自身は product ではない（overview.md を持たない）。
 
 **package は app を知らない。** この向きが破れていたら、鎖の議論より先に報告する（境界が壊れていると
 鎖の整合を論じても意味がないため）。
