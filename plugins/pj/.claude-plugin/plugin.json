@@ -1,0 +1,9 @@
+{
+  "name": "pj",
+  "description": "仕様駆動パイプライン: /pj:setup (DAY 0 立ち上げ) → /pj:spec (WHAT) → /pj:design (HOW) → /pj:build (DOING)。立ち上げ後の修正は /pj:change 一本（層を意識せず自然文で投げると正しいレイヤーから直して伝播）。setup は足回り・pj-managed な CLAUDE.md・デザインシステム（DS非依存の3スロット契約）を用意。readiness 軸・共通モード・glossary・保守規律を共有し、1プロジェクトを立ち上げから WHAT→HOW→コードまで一貫して育てる。",
+  "version": "0.1.0",
+  "author": {
+    "name": "yuki",
+    "email": "yuki.ichikawa@craif.com"
+  }
+}

@@ -1,0 +1,35 @@
+/* preset デザイントークン（外部 DS なしの出発点）
+ * 視覚の正は docs/design/design-language.md。各トークンは DL-NN に対応づける。
+ * 値は仮。プロジェクトのブランドに合わせて design-language を育てながら調整する。
+ * 生の hex / rgb をコンポーネントに直書きせず、必ずこのトークン経由で使う（単一窓口）。 */
+:root {
+  /* 色: 意味で持つ（装飾しない）。bg と foreground をペアで（DL: 色の意味論） */
+  --color-bg: #ffffff;
+  --color-fg: #1a1a1a;
+  --color-muted: #6b7280;
+  --color-border: #e5e7eb;
+  --color-primary: #2563eb; /* 画面に primary は1つ */
+  --color-primary-fg: #ffffff;
+  --color-destructive: #dc2626;
+  --color-warning: #d97706;
+
+  /* 余白スケール: none/sm/md/lg/xl（場当たりの px を散らさない） */
+  --space-sm: 0.25rem;
+  --space-md: 0.5rem;
+  --space-lg: 1rem;
+  --space-xl: 2rem;
+
+  /* タイポ */
+  --font-size-sm: 0.875rem;
+  --font-size-md: 1rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-bold: 700;
+
+  /* 角丸 / 影 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --shadow-md: 0 1px 3px rgb(0 0 0 / 0.1);
+}

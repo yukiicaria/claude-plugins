@@ -1,0 +1,183 @@
+---
+name: design
+description: pj パイプラインの HOW レイヤー。spec（WHAT）を技術設計に落とす。スタック選定・具体データモデル・横断規約・ADR・デザイン言語（DL-NN）を対話で確定する。mock モードでこだわりの強い画面の UI モックを docs/design/mocks/ に取り込み UX-NN を採番する。status・next・review・audit を文脈で切り替える。既存物の修正は /pj:change が入口。
+disable-model-invocation: true
+argument-hint: "[status|next|review|audit|mock <mock-id>|<決定事項 or 論点>]"
+---
+
+spec を実装可能な技術設計に落とすコマンド。`docs/design/` をユーザーと協働で編集する。
+
+引数: $ARGUMENTS
+
+## 最初に必ず読む
+
+共通の軸・モード・保守規律・禁止事項は **`../../_shared/concepts.md`**（pj パイプラインの背骨）。
+起動したらまずそれを読む。design は spec の**下流**なので、起動時に **`docs/specs/` も読む**こと
+（spec が WHAT の正。design はそれを変えない）。
+
+**UI を持つプロジェクトなら `../../_shared/visual.md` も読む**（§V1 視覚の正 / §V2 モック）。
+design-language・モックを扱うのはこの skill なので、実質いつも必要。CLI 等 UI 無しなら読まなくてよい。
+
+## ゴール（design レイヤー）
+
+**実装 Agent が追加の技術判断なしにコードを書けるレベル**まで HOW を確定する。「どの技術で・どんな
+構造で作るか」が一意に決まっている状態がゴール。振る舞い（WHAT）を変えたくなったら、ここでこね回さず
+**`/pj:change`** に投げる（正レイヤーの判定と伝播はそちらが引き受ける。concepts §4）。
+
+## ファイル構造
+
+```
+docs/design/
+  stack.md          # 言語/FW/DB/ORM/UI/状態管理/テストランナー（＋採用理由）
+  data-model.md     # spec の概念骨格 → 具体エンティティ/関連/不変条件
+  conventions.md    # フォルダ構成・命名・横断方針・テスト方針
+  design-language.md # 視覚の正（UI を持つプロジェクトのみ）。デザイン原則/トークン/コンポーネント語彙＋DL-NN
+  mocks/            # こだわりの強い画面のモック（体験の正・visual.md §V2）。無い画面のほうが多いのが正常
+    README.md       #   索引
+    <mock-id>/mock.md + index.html
+  adr/NNNN-*.md     # 大きな技術決定の記録（理由が辿れる）
+```
+
+初回起動で `docs/design/` が無ければ、`../../_shared/templates/` の stack.md / data-model.md /
+conventions.md / design-language.md / adr.md / design-CLAUDE.md をコピーして作る（design-CLAUDE.md は
+`docs/design/CLAUDE.md` へ。design-language.md は UI を持つプロジェクトのみ。CLI 等 UI 無しは N/A 宣言で省略可）。
+
+## この skill のキモ: spec から技術決定バックログを収穫する
+
+起動時、`docs/specs/` 全体を読んで **HOW で決めるべき論点を自動で集める**:
+- 各 feature の「実装裁量」「未定」「要検討」マーカー
+- overview の非機能要件・制約・**横断論点**（例: 同時編集の競合制御のような全 feature の宿題）
+- spec の概念骨格のうち、まだ具体スキーマに落ちていないもの
+
+これを技術決定バックログとして提示し、優先度順に詰める。**横断項目は conventions.md で1回だけ決めて
+全 feature に効かせる**（各実装にゆだねるとバラつく事故を防ぐ）。
+
+## デザイン言語を spec から導出する（UI を持つプロジェクト）
+
+視覚の HOW＝`design-language.md`（視覚の正・visual.md §V1）も design フェーズで決める。技術決定バックログの収穫と
+対をなす作業:
+- spec（利用者・データ量・頻度・デバイス・トーン・既存色資産）から **UX 意図を収穫**し、テンプレ内の
+  **導出インタビュー**を 1〜2 問ずつ詰めて原則を確定、各決定に **DL-NN を自動採番**する。
+- 「視覚階層・強調・色の意味論・コンポーネント語彙」は**横断決定として 1 回決めて全 feature に効かせる**
+  （conventions.md「コンポーネント語彙」と接続。各画面の作り込みにゆだねるとブレる）。
+- **greenfield**: コードより先に design-language を作る（実装 Agent が**追加の視覚判断なし**に画面を組める水準＝readiness）。
+- **brownfield**: 既存 UI を `pj:design-reviewer` で棚卸しし、実態と理想の差分を踏まえて reconcile する。
+
+## mock（モックの取り込み — `/pj:design mock <mock-id> [出典URL|パス]`）
+
+こだわりの強い画面のモックを `docs/design/mocks/` に取り込む（方法論は visual.md §V2）。**モックは作らない**
+（作るのは Artifact なり手元の HTML なり別手段。ここは**取り込み口**）。
+
+**まず `docs/design/mocks/<mock-id>/` が既にあるかで経路が分かれる**:
+- **無い → 下の「新規取り込み」**
+- **ある → さらに下の「差し替え（リモック）」**（実装を見て気に入らず作り直したケース。AC・テスト・
+  UX-NN・実装が既にあるので、上書き前の安全確認が要る）
+
+### 新規取り込み（`mocks/<mock-id>/` が無い）
+
+手順:
+
+1. **基準を確認**: visual.md §V2「いつ作るか」に照らし、モックを持つべき画面か一言で判定する。
+   CRUD フォーム等なら「DL-NN で足りるのでモックは要りません」と伝えて終わる。
+2. **実体を取り込む**: `docs/design/mocks/<mock-id>/index.html` として保存。**埋め込みアセット
+   （フォント・画像・DS バンドル）は剥がす**（目安 100KB）。開いて動く状態を保つ。
+3. **`mock.md` を作る**: `../../_shared/templates/mock.md` から。出典 URL・取り込み日を必ず残す。
+   索引が無ければ `../../_shared/templates/mocks-README.md` を `mocks/README.md` として置き、1行追加する。
+4. **構成を書き出す**（ID は振らない）: ペイン構成・配置・列順・密度。見比べれば検出できるので台帳に載せない。
+5. **UX-NN を採番する**（ここだけ ID）: 静的に見比べても検出できない挙動だけ — ジェスチャ / 段階的開示の閾値 /
+   スクロール面の同期 / オーバーレイの位置決め / 状態の保存。各 ID に `index.html:<line>` を添える。
+   数本に収まらないなら振りすぎなので絞る。
+6. **DL への昇格を判定する**: その挙動が**全画面で効くべき**なら UX-NN に残さず `design-language.md` に
+   DL-NN として採番する。ここを怠ると UX-NN が肥大化し design-language が空洞化する。
+7. **WHAT の気づきは spec へ**: モックを見て振る舞いの誤り・不足に気づいたら、ここで辻褄を合わせず
+   `/pj:change` に投げる（visual.md §V2 末尾）。反映先だけ `mock.md` に残す。
+
+### 差し替え（リモック — `mocks/<mock-id>/` が既にある）
+
+実装を見て「これは違う」となり作り直したケース（規律は visual.md §V2「差し替え」）。**既定 L3**
+（HOW が変わる・WHAT は不変）。上書きする前に足場を確かめる:
+
+0. **足場の確認**: 対象 feature の **AC テストが緑か**確認する。赤いまま差し替えると、あとで赤くなったのが
+   差し替えのせいか元からかを切り分けられない。赤ければ先に緑にするか、差し替えを保留する。
+1. **現状を控える**: `mock.md` の UX-NN 一覧と、実装側の `@satisfies <mock-id>-UX-NN` の grep 結果を控える
+   （「今なにがあるか」の基準線。これが無いと何が消えたか分からない）。
+2. **取り込む**: `index.html` を差し替える（埋め込みアセットは剥がす。目安 100KB）。旧版は git 履歴に残るので
+   別名保存はしない。`mock.md` の「出典」に**新しい世代を1行追加**する（**旧行は消さない**）。
+   部分だけの作り直しなら `partials/<領域>.html` に置き、丸ごと差し替えない（visual.md §V2）。
+3. **3方向の差分を取る**: ①新モック vs 旧モック（何を変えたかったか）②新モック vs 現実装（実装をどう変えるか）
+   ③**新モック vs 現 AC（仕様が壊れないか）**。③を飛ばさない。
+4. **AC を1件ずつ照合する（最重要）**: 現 AC のうち、新モックが**明示的に否定している**ものだけを抽出する。
+   **「描かれていないだけ」は否定ではない**（モックはハッピーパスのダミーデータで作られ、エラー状態・空状態・
+   権限による非表示・バリデーションは描かれないのが普通。visual.md §V2）。否定と判断したものは
+   **必ずユーザーに確認**し、合意できたら `/pj:change`（L2）で spec から廃止する。**この skill で AC を消さない。**
+5. **UX-NN を更新する**: 残る挙動は**同じ ID を維持**（振り直さない）／消えた挙動は**欠番化**して理由を1行／
+   増えた挙動は**新番**。採番台帳の次番を進める（concepts §1.1）。
+6. **DL との衝突を判定**: 新モックが design-language に反する見た目を持つなら、「**DL を変える**」のか
+   「**モックを DS に寄せる**」のかを決める。DL を変えるなら `/pj:change` で DL を採番し直す（黙って折衷しない）。
+7. **実装へ伝播**: `/pj:build <feature>` か `/pj:change` で実装を新モックに合わせる。欠番になった UX-NN の
+   `@satisfies` は実装から除去する。最後に **AC テストが緑のままであることを確認**する
+   —— **赤くなったら振る舞いを変えてしまった証拠**なので手順4に戻る（これが機械的な安全弁）。
+8. **記録**: `mock.md` の変更履歴・`updated` を更新。体験が変わって未決が開いたなら
+   `design-language.md` の `progress` を**下げる**（concepts §2）。
+
+## モード別の振る舞い（dispatch は concepts.md §3）
+
+### 対話（既定）
+1. `docs/specs/`（WHAT）と `docs/design/`（現在の HOW）を読む
+2. サマリを出す:
+```
+[design 現状]
+- スタック: <主要な確定/未定>
+- データモデル: <エンティティ数 / 未確定の関連>
+- 設計確定度: ■■■□□
+
+[spec から拾った未決の技術論点]
+1. 同時編集の競合制御（overextends 全 feature・未着手）
+2. リッチエディタ選定（event のプログラム）
+3. <...>
+
+どれから決めます?
+```
+3. 決定したら該当ファイルに反映。大きな選定は adr/ に1件記録（理由付き）。
+- エンティティ名・識別子は **glossary に従う**（spec と双方向トレース可能に）
+- 1つの技術決定が複数 feature に効くなら、conventions.md に横断方針として書く
+
+### 軽量修正
+concepts.md §4 の手順（スコープ判定 → 該当ファイル更新 → 変更履歴 → updated → 影響1個提示）。
+**デザイン原則（DL-NN）を増やす/廃止する修正はこのモードで処理しない**。`/pj:change` に渡す
+（concepts.md §3 モード5 / §1.1）。既存 DL の言い回し調整など ID を動かさない修正はここで即時反映してよい。
+
+### status / next
+status は設計確定度＋未決の技術論点一覧。next は次に決めるとよい論点を 2〜3 個
+（優先: 多数の feature に効く横断決定 / build の前提になる data-model / 未着手のコア）。
+
+### review（readiness-reviewer に委譲）
+`Agent` で **`pj:readiness-reviewer`** を起動（対象 = `docs/design/`＋`docs/specs/`、レイヤー = design）。
+「実装 Agent が追加の技術判断なしにコードを書けるか」を判定させ、要点整理して伝える。編集しない。
+UI/視覚の整合を見るときは加えて `Agent` で **`pj:design-reviewer`** を起動する
+（対象 = `docs/design/design-language.md` ＋ **`docs/design/mocks/`** ＋ `src/`）。違反 DL と、モックがある画面は
+**構成の乖離・UX-NN の実装漏れ**を要点整理して伝える。
+
+### audit（ドリフト監査）
+**concepts.md §7「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は常に
+`docs/specs/` ＋ `docs/design/` ＋ `src/`）。design から起動した場合は、報告の並び順だけ
+**design 決定 ↔ 実装/スキーマの乖離を先頭**にする。UI の DL 違反を深掘りするときは
+**`pj:design-reviewer`** を併用してよい。編集しない。
+
+### build へ渡す
+design が固まったら **`/pj:build <feature>` で受入条件を test に写してテスト先行で実装**、が標準導線
+（受け渡しの作法は concepts §3）。大物 feature の事前 orientation が欲しいときは
+`/pj:build plan <feature>`（コードを書かず計画だけ出す）を使う。
+
+## 設計の確定度（格納先は concepts.md §2 の表）
+
+**成果物ごとに frontmatter の `progress` を持つ**: `stack.md` / `data-model.md` / `conventions.md` ／
+UI があれば `design-language.md`。評価軸は concepts.md §2（「実装 Agent が追加の技術判断なしに書けるか」。
+UI があれば「追加の視覚判断なしに画面を組めるか」も含む）。
+
+- **design 全体の確定度 = これらの `progress` の平均**（UI が無ければ design-language を除く）。
+  status はこの**保存値**から出す。**その場で推定し直さない**（都度推定だと値が揺れて後退に気づけない）。
+- ファイルを直したら `progress` を**つけ直し**、`updated` を今日にし、変更履歴に1行残す。
+  論点が再び開いたら遠慮なく**下げる**（§2）。
+- **モックのある画面は、モックと UX-NN が揃うまで `design-language.md` の `progress` を 4-5 にしない**
+  （実装 Agent が追加の視覚判断なしに組めないため）。
