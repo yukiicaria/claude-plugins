@@ -1,8 +1,8 @@
 ---
 name: setup
-description: pj パイプラインの Day 0（立ち上げ）レイヤー。新規プロジェクトの足回り（git/lint/format/husky）を一括で作り、ルート CLAUDE.md を pj-managed として生成し、デザインシステムを導入する。言語非依存。完了後は /pj:spec で WHAT を書き始める。
+description: pj パイプラインの Day 0（立ち上げ）レイヤー。新規プロジェクトの足回り（git/lint/format/husky）を一括で作り、ルート CLAUDE.md を pj-managed として生成し、デザインシステムを導入する。package <name> モードで、自分で作るライブラリ（package product）の器を packages/ に生やす。言語非依存。完了後は /pj:spec で WHAT を書き始める。
 disable-model-invocation: true
-argument-hint: "[<なし=フル立ち上げ> | ds（デザインシステムだけ入れ直す）]"
+argument-hint: "[<なし=フル立ち上げ> | ds（DSだけ入れ直す） | package <name>（ライブラリの器を作る）]"
 allowed-tools: Bash(*), Write, Edit, Read, Glob
 ---
 
@@ -14,9 +14,12 @@ WHAT を書き始めるのが標準導線。
 
 ## 最初に必ず読む
 
-共通の軸・モード・保守規律・**運用宣言の管理ブロック（§10）**は **`../../_shared/concepts.md`**
+共通の軸・モード・保守規律・**運用宣言の管理ブロック（§16）**は **`../../_shared/concepts.md`**
 （pj パイプラインの背骨）。起動したらまず読む。**デザインシステムを導入する（E）なら
 `../../_shared/visual.md` §V1（視覚の正・DS の3スロット契約）も読む。** UI を持たない（CLI 等）なら不要。
+
+**`package <name>` モードなら concepts §2（product モデル）を必ず読む。**
+そこで作る器は「package は app を知らない」を構造として持たせるものなので、規約を外すと意味がない。
 
 setup は pj の**最上流（Day 0）**で、spec/design/build の**手前**に立つ。ここで作るのは「中身」ではなく
 「中身を育てられる器」。
@@ -35,6 +38,7 @@ setup は pj の**最上流（Day 0）**で、spec/design/build の**手前**に
 
 - **引数なし** → フル立ち上げ（下記 A〜E を全部）。既存ファイルは壊さずマージ／不足分のみ追記。
 - **`ds`** → E（デザインシステム導入）だけを実行（既存プロジェクトに後から入れる・入れ直す）。
+- **`package <name>`** → G（package product の器を作る）だけを実行。A〜E は動かさない。
 
 ---
 
@@ -81,7 +85,7 @@ CLAUDE.md が無ければ作る。**マーカー外（人間の領域）**に検
 Architecture はスタブ可）＋ Commit Rules（husky の pre-commit/pre-push）・Branch Strategy（main 直 push 禁止 /
 develop 起点 / feature・fix）・「bun を使う／`--no-verify` 禁止」を書く。
 
-そのうえで **concepts.md §10 の正準な管理ブロックを stamp** する（`<!-- pj:managed start -->`〜`end`）。
+そのうえで **concepts.md §16 の正準な管理ブロックを stamp** する（`<!-- pj:managed start -->`〜`end`）。
 既にマーカーがあれば重複させない。これにより、**普通のセッションや新しい人も入口（`/pj:change`）に必ず着地**する。
 CLAUDE.md が既存の場合は中身を作り直さず、管理ブロックの stamp だけ行う。
 
@@ -99,7 +103,7 @@ CLAUDE.md が既存の場合は中身を作り直さず、管理ブロックの 
 | **正の宣言** | 視覚の正にベース語彙を固定 | `docs/design/design-language.md` §F に「語彙・トークンの正 = <DS>」を書く |
 
 > **強制（lint で生 color・生 svg・別ライブラリをブロック）はこのスキルでは入れない。**
-> 当面は導線（design-language / CLAUDE.md ポインタ）＋ audit の `pj:design-reviewer`（concepts §7）で運用する
+> 当面は導線（design-language / CLAUDE.md ポインタ）＋ audit の `pj:design-reviewer`（concepts §13）で運用する
 > （oyster README と同じ「まず warning、ブロックは規律が固まってから」方針）。
 
 ユーザーに確認する: 「デザインシステムは? **① 既存を入れる（例: oyster-lib）／② preset（外部DSなし）**」
@@ -128,12 +132,89 @@ UI を持たない（CLI 等）なら**スキップ**し、design-language は N
 
 ---
 
-## F. 完了報告
+## F. package product の生成（`/pj:setup package <name>`）
+
+> **これは「自分で作るライブラリ」の器を生やすモード**（concepts §2）。
+> 「◯◯をライブラリとして切り出したい」「共通化して package にしたい」と言われたらここ。
+> **中身（spec / design）は作らない。** 器だけ作って `/pj:spec` に引き渡す（このスキルの一貫した役割）。
+
+**大前提: package は app を知らない。** ここで作る器は、その制約を**構造として**持つ
+（package.json の依存に app を書かない・lint で相対パス脱出を塞ぐ）。
+
+### F-1. 事前確認
+
+1. **root product であることを確認**（`docs/specs/overview.md` が repo 直下にある）。
+   `packages/` の中から呼ばれていたら「package の中に package は作らない」と伝えて止める（concepts §2）。
+2. **名前の重複チェック**: `packages/<name>/` が既にあれば止めて既存を案内する。
+3. **名前が feature 名と衝突していないか**確認する（concepts §4 の repo 内一意）。衝突していたら
+   どちらを改名するか一言確認する。
+
+### F-2. 器を作る
+
+```
+packages/<name>/
+  package.json          name は root の scope に合わせる（例 @<scope>/<name>）。
+                        dependencies に **app を書かない**。依存する他 package だけを workspace 依存で書く
+  tsconfig.json         root の tsconfig を extends（rootDir: src / outDir: dist）
+  src/index.ts          公開 API の入口（空でよい）
+  CLAUDE.md             ../../_shared/templates/package-CLAUDE.md から
+  docs/
+    specs/
+      overview.md       ../../_shared/templates/package-overview.md から（progress: 0）
+      glossary.md       ../../_shared/templates/glossary.md から（**この package の語彙だけ**）
+      CLAUDE.md         ../../_shared/templates/specs-CLAUDE.md から
+    design/
+      CLAUDE.md         ../../_shared/templates/design-CLAUDE.md から
+```
+
+- **`docs/design/conventions.md` と `design-language.md` は作らない。** root 所有で、この package は
+  **準拠する側**（concepts §3・§12）。`docs/design/CLAUDE.md` にその旨を1行書く。
+- **`docs/specs/features/` は作らない。** overview 1枚から始め、育ったら割る（concepts §6）。
+- data-model / stack は**この package が必要になってから** `/pj:design` が作る（先回りしない）。
+
+### F-3. workspace に載せる（install して使う形にする）
+
+1. root の `package.json` に `"workspaces": ["packages/*"]` が無ければ追加する。
+2. **app 側が使うときは workspace 依存として書く**（`"@<scope>/<name>": "workspace:*"`）。
+   相対パス import で使わせない —— これが「install して使う」を形にする部分。
+3. `bun install` を流してリンクを張る。
+
+### F-4. 依存方向を lint で塞ぐ
+
+package.json の依存だけでは**相対パスでの脱出**（`../../src/...`）を止められない。root の eslint 設定に
+ゾーン制約を足す（`eslint-plugin-import` が無ければ入れる）:
+
+```js
+// packages/ から app（src/）への参照を禁止する
+'import/no-restricted-paths': ['error', {
+  zones: [{ target: './packages', from: './src',
+            message: 'package は app を知らない（pj concepts §2）' }],
+}]
+```
+
+既に同等のルールがあれば重複させない。**この設定が入らなかったら、その旨を完了報告に明記する**
+（強制が1枚欠けた状態を黙って作らない）。
+
+### F-5. root の product 表に1行足す
+
+root の `docs/specs/overview.md` の product 表（concepts §9 上段）に新しい行を追加する。
+表がまだ無ければ作る。値は `spec: □□□□□ / build: □□□□□`、依存列は空。
+
+### F-6. 引き渡し
+
+「器ができたので `/pj:spec` で `<name>` の WHAT を書き始めてください」と案内する。
+**このスキルは overview の中身を書かない。**
+
+---
+
+## G. 完了報告
 
 作成・更新したファイルを一覧で報告し、次のアクションを案内する:
 - **`/pj:spec`** で WHAT（要件）を書き始める（pj パイプラインの起点）
 - CLAUDE.md のマーカー外スタブ（Overview / Tech Stack / Architecture）を埋める
 - DS の差分が出てきたら `docs/design/design-language.md` に DL-NN を足す（`/pj:design` / `/pj:change`）
+- **package モードの場合**: 依存 lint が入ったか／workspace リンクが張れたかを明示し、
+  `/pj:spec <name>` を案内する
 
 > このスキルは中身（docs/specs・docs/design 本体）を作らない。それは `/pj:spec` `/pj:design` の init が担う
 > （概念の重複を避ける）。setup は器だけを用意して引き渡す。

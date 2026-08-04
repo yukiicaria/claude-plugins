@@ -5,15 +5,42 @@
 
 ```
 /pj:setup   DAY 0  足回り + 器     git/lint/format/husky、pj-managed な CLAUDE.md、デザインシステム導入
+                                   package <name> で「自分で作るライブラリ」の器を生やす
 /pj:spec    WHAT   docs/specs/    要件を対話で詰める
 /pj:design  HOW    docs/design/   技術設計（スタック/スキーマ/横断規約/ADR）に落とす
 /pj:build   DOING  src/ + tests   受入条件を test に写してテスト先行で実装
-/pj:change  保守   全レイヤー横断  「直したい」唯一の入口。層を意識せず使える
+/pj:change  保守   全レイヤー横断  「直したい」唯一の入口。層も product も意識せず使える
 ```
 
 新規プロジェクトは **`/pj:setup` で立ち上げ → `/pj:spec` で WHAT を書き始める**。setup は中身を作らず、
 足回り・pj-managed な CLAUDE.md・デザインシステム（**3スロット契約**: 実体／導線／正の宣言）を用意して引き渡す。
 デザインシステムは特定ライブラリに依存せず、既存 DS（例: oyster-lib）でも preset でも同じ枠に収まる。
+
+## 単位は product（app も、自分で作るライブラリも）
+
+pj が回す単位は **product** — spec + design + build を1周持ち、**独立して作れる**もの。
+
+```
+1 リポジトリ = 実現したいこと 1 つ
+
+  root product（app）      リポジトリのゴール本体。docs/ は repo 直下
+    feature                 その product の中の「振る舞いの単位」（受入条件を持つ）
+    ↓ install して使う
+  packages/<name>           自分で作るライブラリ。これも product。app を知らない
+    feature
+```
+
+**package は feature の兄弟ではなく app の兄弟。** 大きくなるプロジェクトで「ここはライブラリとして
+切り出したい」と思ったら **`/pj:setup package <name>`** で器が生え、そこから同じパイプラインを回す。
+
+肝は **依存（depend）と準拠（conform）の区別**:
+
+- **依存** — `feature → package` は OK。**`package → app` は禁止**（import も spec 参照も業務語彙も）。
+  `package.json` の依存・import lint・pj audit の3枚で強制する。
+- **準拠** — 全 product が root の `docs/design/conventions.md`（作法）と `design-language.md`（視覚の正）に従う。
+  **これは依存ではない**（ESLint 設定に従うライブラリを「設定に依存している」とは言わない）。
+
+判断に迷ったら「**別リポジトリに切り出したとき、そのまま動くか**」。定義は `_shared/concepts.md` §2。
 
 ## 開発者が覚えるのは1語だけ: `/pj:change`
 
@@ -25,7 +52,7 @@
 ## 整合性を保つ仕組み（肥大化してもブレない）
 
 - **受入条件の安定 ID** `(<feature>-AC-NN)` を test が参照 → 鎖を grep で機械検証可能（採番は `/pj:change` が自動）。
-  ID 規約（AC-NN / DL-NN / UX-NN）の唯一の定義は `_shared/concepts.md` §1.1。
+  ID 規約（AC-NN / DL-NN / UX-NN）の唯一の定義は `_shared/concepts.md` §4。
 - **こだわりの強い画面はモックを持つ**（`docs/design/mocks/`・visual.md §V2）。運用は2行 —
   **モックを忠実に再現する / DS が設定されていれば語彙とトークンをそれに当てる**。既定は全部再現なので
   「どこがこだわりか」を実装者が選り分けない。ジェスチャ・閾値など**操作しないと気づけない挙動だけ**
@@ -38,8 +65,8 @@
 
 ## 共通の背骨
 
-`_shared/concepts.md` が **5スキル共通の唯一の出典**（readiness 軸 / モード / 安定 ID 規約 §1.1 /
-トレースの鎖 / 保守規律 / 2軸ダッシュボード / glossary / sub-agent 委譲 / audit の起動仕様 §7 / 禁止事項）。
+`_shared/concepts.md` が **5スキル共通の唯一の出典**（readiness 軸 / モード / 安定 ID 規約 §4 /
+トレースの鎖 / 保守規律 / 2軸ダッシュボード / glossary / sub-agent 委譲 / audit の起動仕様 §13 / 禁止事項）。
 各 SKILL.md は起動時にこれを読み、**同じ規則を二重に書かずここを参照する**。
 
 ## 共通モード（全スキル同じ意味）
@@ -63,7 +90,7 @@ WHAT を詰めるほどテスト仕様が太る。
 ## 保守（一度作って直す）
 
 変更は**正しいレイヤーから入れ、トレースの鎖を下へ伝播**させる。実装中に仕様/設計の誤りに気づいたら
-**`/pj:change` に投げる**（層を選び分けない）。不安なときは `audit` で乖離を検出する（`_shared/concepts.md` §4）。
+**`/pj:change` に投げる**（層を選び分けない）。不安なときは `audit` で乖離を検出する（`_shared/concepts.md` §8）。
 
 ## インストール
 
@@ -82,7 +109,7 @@ WHAT を詰めるほどテスト仕様が太る。
 - 目的（ドリフト検出）は **`audit` の `drift-auditor`** がより確実に果たす。あちらは鎖
   （受入条件↔test↔code / DL-NN・UX-NN↔実装）を**実際に突合**するので、憶測でなく根拠つきで検出できる。
 
-**取りこぼしが不安なときは `audit` を叩く**（`/pj:change` の受動入口も同じ監査を通る。concepts §7）。
+**取りこぼしが不安なときは `audit` を叩く**（`/pj:change` の受動入口も同じ監査を通る。concepts §13）。
 
 > **将来ブロック強制を入れるなら**、受入条件↔test カバレッジ検査や `updated`/変更履歴ガードのように
 > **機械的に真偽が決まるもの**に限る。「pj を通したか」のような**判定できない条件で警告を出さない**

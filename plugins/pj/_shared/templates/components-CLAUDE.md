@@ -30,5 +30,5 @@
 - **色**: トークン（{{TOKENS}}）のみ。**生の hex / rgb・Tailwind の任意値（`bg-[#...]`）を書かない**。
 - **余白 / タイポ / 角丸 / 影**: スケール / トークンに従う（場当たりの px を散らさない）。
 
-> ここは確率的な導線。最終的な整合は review/audit の **`pj:design-reviewer`**（concepts §7）で確認する。
+> ここは確率的な導線。最終的な整合は review/audit の **`pj:design-reviewer`**（concepts §13）で確認する。
 > 詳しい方法論は pj プラグインの `_shared/concepts.md`。視覚の正を直すときは `/pj:design` か `/pj:change`。

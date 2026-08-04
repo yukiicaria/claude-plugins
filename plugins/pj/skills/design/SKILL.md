@@ -22,25 +22,45 @@ design-language・モックを扱うのはこの skill なので、実質いつ�
 
 **実装 Agent が追加の技術判断なしにコードを書けるレベル**まで HOW を確定する。「どの技術で・どんな
 構造で作るか」が一意に決まっている状態がゴール。振る舞い（WHAT）を変えたくなったら、ここでこね回さず
-**`/pj:change`** に投げる（正レイヤーの判定と伝播はそちらが引き受ける。concepts §4）。
+**`/pj:change`** に投げる（正レイヤーの判定と伝播はそちらが引き受ける。concepts §8）。
+
+## 対象 product を決める（起動時に必ず・concepts §2）
+
+spec と同じ手順で**どの product の design の話か**を先に決める:
+`docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob して product を列挙し、
+引数・文脈から対象を決め（既定は root product）、**一行宣言してから動く**。
 
 ## ファイル構造
+
+> パスは**対象 product のルートからの相対**。★ の3つは **root product だけが持ち、全 product が準拠する**
+> （concepts §3・§12）。package では**作らない**。
 
 ```
 docs/design/
   stack.md          # 言語/FW/DB/ORM/UI/状態管理/テストランナー（＋採用理由）
   data-model.md     # spec の概念骨格 → 具体エンティティ/関連/不変条件
-  conventions.md    # フォルダ構成・命名・横断方針・テスト方針
-  design-language.md # 視覚の正（UI を持つプロジェクトのみ）。デザイン原則/トークン/コンポーネント語彙＋DL-NN
-  mocks/            # こだわりの強い画面のモック（体験の正・visual.md §V2）。無い画面のほうが多いのが正常
-    README.md       #   索引
-    <mock-id>/mock.md + index.html
   adr/NNNN-*.md     # 大きな技術決定の記録（理由が辿れる）
+
+  ★ conventions.md      # 作法。フォルダ構成・命名・横断方針・テスト方針・product 構成
+  ★ design-language.md  # 視覚の正（UI を持つ場合）。デザイン原則/トークン/コンポーネント語彙＋DL-NN
+  ★ mocks/              # こだわりの強い画面のモック（体験の正・visual.md §V2）
+      README.md         #   索引
+      <mock-id>/mock.md + index.html
 ```
 
-初回起動で `docs/design/` が無ければ、`../../_shared/templates/` の stack.md / data-model.md /
-conventions.md / design-language.md / adr.md / design-CLAUDE.md をコピーして作る（design-CLAUDE.md は
-`docs/design/CLAUDE.md` へ。design-language.md は UI を持つプロジェクトのみ。CLI 等 UI 無しは N/A 宣言で省略可）。
+**package product の design で扱うのは `stack.md` / `data-model.md` / `adr/` だけ。**
+作法と視覚の正は root を**参照する**（所有しない）。package ごとに視覚の正を持つと DS が割れる。
+UI を持つ package（`<lib>-ui` 等）も **root の design-language に準拠**し、コードに `@satisfies DL-NN` を付ける。
+
+初回起動で対象 product の `docs/design/` が無ければ `../../_shared/templates/` から作る:
+
+- **root product**: stack.md / data-model.md / conventions.md / design-language.md / adr.md / design-CLAUDE.md
+  （design-CLAUDE.md は `docs/design/CLAUDE.md` へ。design-language.md は UI を持つ場合のみ。
+  CLI 等 UI 無しは N/A 宣言で省略可）
+- **package product**: stack.md / data-model.md / adr.md / design-CLAUDE.md のみ。
+  `docs/design/CLAUDE.md` に「作法と視覚の正は root が正。ここでは所有しない」を1行書く。
+
+> **必要になってから作る。** データを持たない package に data-model.md を先回りで置かない。
 
 ## この skill のキモ: spec から技術決定バックログを収穫する
 
@@ -51,6 +71,10 @@ conventions.md / design-language.md / adr.md / design-CLAUDE.md をコピーし�
 
 これを技術決定バックログとして提示し、優先度順に詰める。**横断項目は conventions.md で1回だけ決めて
 全 feature に効かせる**（各実装にゆだねるとバラつく事故を防ぐ）。
+
+**「全 package 共通の◯◯」は必ず root の `conventions.md` に置く**（concepts §12）。
+package の design にも app の spec にも書かない。前者は他 package に効かず、後者はレイヤー違反かつ
+`package → app` の向きを作る。**app の spec にこの手の作法を見つけたら、それは移設対象**として報告する。
 
 ## デザイン言語を spec から導出する（UI を持つプロジェクト）
 
@@ -111,16 +135,16 @@ conventions.md / design-language.md / adr.md / design-CLAUDE.md をコピーし�
    権限による非表示・バリデーションは描かれないのが普通。visual.md §V2）。否定と判断したものは
    **必ずユーザーに確認**し、合意できたら `/pj:change`（L2）で spec から廃止する。**この skill で AC を消さない。**
 5. **UX-NN を更新する**: 残る挙動は**同じ ID を維持**（振り直さない）／消えた挙動は**欠番化**して理由を1行／
-   増えた挙動は**新番**。採番台帳の次番を進める（concepts §1.1）。
+   増えた挙動は**新番**。採番台帳の次番を進める（concepts §4）。
 6. **DL との衝突を判定**: 新モックが design-language に反する見た目を持つなら、「**DL を変える**」のか
    「**モックを DS に寄せる**」のかを決める。DL を変えるなら `/pj:change` で DL を採番し直す（黙って折衷しない）。
 7. **実装へ伝播**: `/pj:build <feature>` か `/pj:change` で実装を新モックに合わせる。欠番になった UX-NN の
    `@satisfies` は実装から除去する。最後に **AC テストが緑のままであることを確認**する
    —— **赤くなったら振る舞いを変えてしまった証拠**なので手順4に戻る（これが機械的な安全弁）。
 8. **記録**: `mock.md` の変更履歴・`updated` を更新。体験が変わって未決が開いたなら
-   `design-language.md` の `progress` を**下げる**（concepts §2）。
+   `design-language.md` の `progress` を**下げる**（concepts §5）。
 
-## モード別の振る舞い（dispatch は concepts.md §3）
+## モード別の振る舞い（dispatch は concepts.md §7）
 
 ### 対話（既定）
 1. `docs/specs/`（WHAT）と `docs/design/`（現在の HOW）を読む
@@ -143,9 +167,9 @@ conventions.md / design-language.md / adr.md / design-CLAUDE.md をコピーし�
 - 1つの技術決定が複数 feature に効くなら、conventions.md に横断方針として書く
 
 ### 軽量修正
-concepts.md §4 の手順（スコープ判定 → 該当ファイル更新 → 変更履歴 → updated → 影響1個提示）。
+concepts.md §8 の手順（スコープ判定 → 該当ファイル更新 → 変更履歴 → updated → 影響1個提示）。
 **デザイン原則（DL-NN）を増やす/廃止する修正はこのモードで処理しない**。`/pj:change` に渡す
-（concepts.md §3 モード5 / §1.1）。既存 DL の言い回し調整など ID を動かさない修正はここで即時反映してよい。
+（concepts.md §7 モード5 / §4）。既存 DL の言い回し調整など ID を動かさない修正はここで即時反映してよい。
 
 ### status / next
 status は設計確定度＋未決の技術論点一覧。next は次に決めるとよい論点を 2〜3 個
@@ -159,25 +183,28 @@ UI/視覚の整合を見るときは加えて `Agent` で **`pj:design-reviewer`
 **構成の乖離・UX-NN の実装漏れ**を要点整理して伝える。
 
 ### audit（ドリフト監査）
-**concepts.md §7「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は常に
-`docs/specs/` ＋ `docs/design/` ＋ `src/`）。design から起動した場合は、報告の並び順だけ
-**design 決定 ↔ 実装/スキーマの乖離を先頭**にする。UI の DL 違反を深掘りするときは
-**`pj:design-reviewer`** を併用してよい。編集しない。
+**concepts.md §13「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
+トライアド** `docs/specs/` ＋ `docs/design/` ＋ `src/` ＋ root の作法）。product が明示されなければ
+**全 product を順に**見る。design から起動した場合は、報告の並び順だけ**design 決定 ↔ 実装/スキーマの
+乖離を先頭**にする（ただし **product 境界の違反はさらにその前**・concepts §13 観点B）。
+UI の DL 違反を深掘りするときは **`pj:design-reviewer`** を併用してよい。編集しない。
 
 ### build へ渡す
 design が固まったら **`/pj:build <feature>` で受入条件を test に写してテスト先行で実装**、が標準導線
-（受け渡しの作法は concepts §3）。大物 feature の事前 orientation が欲しいときは
+（受け渡しの作法は concepts §7）。大物 feature の事前 orientation が欲しいときは
 `/pj:build plan <feature>`（コードを書かず計画だけ出す）を使う。
 
-## 設計の確定度（格納先は concepts.md §2 の表）
+## 設計の確定度（格納先は concepts.md §5 の表）
 
-**成果物ごとに frontmatter の `progress` を持つ**: `stack.md` / `data-model.md` / `conventions.md` ／
-UI があれば `design-language.md`。評価軸は concepts.md §2（「実装 Agent が追加の技術判断なしに書けるか」。
-UI があれば「追加の視覚判断なしに画面を組めるか」も含む）。
+**成果物ごとに frontmatter の `progress` を持つ**: `stack.md` / `data-model.md` ／ **root なら**
+`conventions.md`・（UI があれば）`design-language.md`。評価軸は concepts.md §5（「実装 Agent が追加の
+技術判断なしに書けるか」。UI があれば「追加の視覚判断なしに画面を組めるか」も含む）。
 
-- **design 全体の確定度 = これらの `progress` の平均**（UI が無ければ design-language を除く）。
+- **design 全体の確定度 = これらの `progress` の平均**（UI が無ければ design-language を除く。
+  **package product は root 所有の conventions・design-language を平均に含めない**——自分で動かせない値を
+  自分の確定度に混ぜると、他 product の都合で自分の数字が動く。concepts §5）。
   status はこの**保存値**から出す。**その場で推定し直さない**（都度推定だと値が揺れて後退に気づけない）。
 - ファイルを直したら `progress` を**つけ直し**、`updated` を今日にし、変更履歴に1行残す。
-  論点が再び開いたら遠慮なく**下げる**（§2）。
+  論点が再び開いたら遠慮なく**下げる**（§5）。
 - **モックのある画面は、モックと UX-NN が揃うまで `design-language.md` の `progress` を 4-5 にしない**
   （実装 Agent が追加の視覚判断なしに組めないため）。

@@ -16,11 +16,18 @@ model: inherit
 
 ## やること
 
+0. **視覚の正は root product が所有する**（concepts §3・§12）。`design-language.md` と `mocks/` は
+   **repo 直下の `docs/design/`** を見る。UI を持つ package（`packages/<name>-ui` 等）も**同じ正に準拠する**
+   ので、対象コードが `packages/` 配下でも基準は root のものを使う。
+   **package 側に `design-language.md` / `mocks/` が生えていたら、それ自体を違反として報告する**
+   （視覚の正が割れると DS が分裂する）。
 1. `docs/design/design-language.md` を読み、DL-NN の一覧（基準）を把握する。無ければ「視覚の正が未作成」と報告し、
    `/pj:design` での design-language 作成を促す（監査は実施できない）。
 2. **`docs/design/mocks/` を確認する**。対象画面にモックがあれば `mock.md` と `index.html` を読み、
    **モックがその画面の追加基準**になる（visual.md §V2）。無ければ DL-NN だけで監査する。
-3. 対象（既定 `src/`、特に `src/components/ui/` と `src/features/*/components/`）を読み、Grep で横断スキャンする。
+3. 対象を読み、Grep で横断スキャンする。既定は **root product の `src/`**（特に `src/components/ui/` と
+   `src/features/*/components/`）。**UI を持つ package が対象に含まれるなら `packages/*/src/` も見る**
+   （`@satisfies DL-NN` は package のコードに付いていてよい。準拠であって依存ではない）。
 4. 下記観点で監査し、各指摘に **違反 DL-NN / UX-NN・file:line・直し方** を添えて報告する。
 5. **DL の鎖**を検証する: 各 DL を実現する共通コンポーネントが存在するか（コンポーネント先頭コメントの
    `@satisfies DL-NN` を Grep）、実現コンポーネントの無い DL（＝未実装）と、語彙を使わず再発明している箇所を挙げる。
