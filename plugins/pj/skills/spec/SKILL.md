@@ -21,28 +21,57 @@ argument-hint: "[status|next|review|glossary|audit|<修正依頼 or feature名>]
 design レイヤー（`/pj:design` → `docs/design/`）の仕事。「何を作るか」「どう振る舞うか」が完全に
 決まっている状態がゴール。
 
+## 対象 product を決める（起動時に必ず・concepts §2）
+
+pj の単位は **product**（app も package も product）。**どの product の spec の話かを最初に決める。**
+
+1. **product を列挙する**: `docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob
+   （これが product の定義。マニフェストは無い）。
+2. **対象を決める**: 引数に product 名／`packages/<name>` があればそれ。無ければ **root product** を既定にする。
+   ただし直近の文脈が特定 package の話なら、それを候補として**一言だけ確認**する。
+3. **宣言する**: 「`<product>` の spec を見ます」と一行で言ってから動く。
+
+**package product を扱うときの追加規律**（root product には不要）:
+
+- **app の業務語彙を書かない。** 書けないなら、それは package ではなく app の feature（切り分けを見直す）
+- **app / 他 feature を `[[リンク]]` で参照しない**（向きが壊れる・concepts §2）
+- 全 product 共通の作法は **root の `docs/design/conventions.md`** が正。ここに写さない（concepts §12）
+- readiness は「**app を知らずにこの package を作れるか**」でも測る（concepts §5）
+
 ## ファイル構造
+
+> パスは**対象 product のルートからの相対**（root product なら repo 直下、package なら `packages/<name>/`）。
 
 ```
 docs/specs/
-  overview.md              # 全体スコープ・目的・機能リスト・2軸ダッシュボード・全体論点
-  features/<name>.md       # 個別機能仕様（kebab-case）
-  glossary.md              # 用語の正（全レイヤー共通 → concepts.md §6）
+  overview.md              # 目的・機能リスト・2軸ダッシュボード・論点（root なら product 表も）
+  features/<name>.md       # 個別機能仕様（kebab-case）。小さい product では作らない（concepts §6）
+  glossary.md              # この product の用語の正（concepts.md §10）
 ```
 
-初回起動で `docs/specs/` が無ければ、`../../_shared/templates/` の overview.md / feature.md /
-glossary.md / specs-CLAUDE.md をコピーして作る（specs-CLAUDE.md は `docs/specs/CLAUDE.md` として配置）。
-あわせて**プロジェクト root の `CLAUDE.md` に運用宣言の管理ブロックを stamp** する（concepts.md §10。無ければ
+**深さは可変**（concepts §6）: overview 1枚から始め、feature が複数見えてきたら `features/` に割る。
+**先回りして割らない。** 段階1でも AC ID は必ず振る（鎖は器の形ではなく ID で成立する）。
+
+初回起動で対象 product の `docs/specs/` が無ければ、`../../_shared/templates/` から作る:
+
+- **root product**: overview.md / feature.md / glossary.md / specs-CLAUDE.md
+  （specs-CLAUDE.md は `docs/specs/CLAUDE.md` として配置）
+- **package product**: **package-overview.md** を `overview.md` として ／ glossary.md / specs-CLAUDE.md
+  （package の器は本来 `/pj:setup package <name>` が作る。ここで作るのは取りこぼしの補完）
+あわせて**プロジェクト root の `CLAUDE.md` に運用宣言の管理ブロックを stamp** する（concepts.md §16。無ければ
 作る・既にマーカーがあれば重複させない）。これにより規律を知らない人・新しいセッションが必ず入口（`/pj:change`）に
 着地できる。対話・軽量修正の編集系フローでも、管理ブロックが無ければ同様に stamp する。
 
-## モード別の振る舞い（dispatch は concepts.md §3）
+## モード別の振る舞い（dispatch は concepts.md §7）
 
 ### 対話（既定）
 起動時に必須:
-1. `docs/specs/` 配下の全 md を読む（無ければテンプレから作る）
+1. **対象 product を決める**（上記「対象 product を決める」）。その product の `docs/specs/` 配下の
+   全 md を読む（無ければテンプレから作る）
 2. 下記サマリを出す:
 ```
+[product] workflow (package)  ← app を知らない側
+
 [現状]
 - 目的: <一行 / 未定>
 - コア機能: <件数> 件
@@ -55,35 +84,51 @@ glossary.md / specs-CLAUDE.md をコピーして作る（specs-CLAUDE.md は `do
 
 今日は何の話します? それとも event の続き?
 ```
+> product が1つ（package を持たない repo）なら `[product]` 行は出さない（ノイズになる）。
 3. ユーザーの答えを待つ。会話の進め方:
 - テンプレ質問を上から順に投げない。文脈に応じて必要な質問だけ
 - 自由発話を解釈して該当 md に書き込む／更新する。更新通知は1行で（diff は見せない）
 - 構造・大枠・全体像を個別項目より先に詰める（個別フィールドの取捨は後回しでよい）
-- feature を追加/更新したら overview も同期（機能リストは**項目の増減のみ**、進捗は2軸ダッシュボードのみ）
-- **前提を壊して作り直すことを恐れない**（concepts.md §4）。作り直したら変更履歴と関連 feature を追って直す
+- feature を追加/更新したら**その product の** overview を同期（機能リストは**項目の増減のみ**、
+  進捗は2軸ダッシュボードのみ）。**package を触ったら続けて root の product 表（上段）も引き直す**
+  （下段が正・上段は導出。concepts §9）
+- 「これは全 package 共通の話だ」と気づいたら spec に書かず **root の `docs/design/conventions.md`** へ
+  送る（concepts §12）。ここで抱え込むとレイヤー違反になる
+- 「これは app を知らずに作れる独立したライブラリだ」と見えてきたら、**`/pj:setup package <name>`** を
+  案内する（器を作ってから中身を書く）
+- **前提を壊して作り直すことを恐れない**（concepts.md §8）。作り直したら変更履歴と関連 feature を追って直す
 
 ### 軽量修正
-concepts.md §4 の手順に従う（スコープ判定 → 該当 feature 特定 → 更新 → 変更履歴 → updated → 影響1個提示）。
+concepts.md §8 の手順に従う（スコープ判定 → 該当 feature 特定 → 更新 → 変更履歴 → updated → 影響1個提示）。
 **受入条件（AC-NN）を増やす/廃止する修正はこのモードで処理しない**。採番規律を一箇所に保つため
-`/pj:change` に渡す（concepts.md §3 モード5 / §1.1）。文言の明確化など ID を動かさない修正はここで即時反映してよい。
+`/pj:change` に渡す（concepts.md §7 モード5 / §4）。文言の明確化など ID を動かさない修正はここで即時反映してよい。
 
 ### status / next
 読むだけ。status は2軸ダッシュボード＋未確定の全体論点。next は次に詰めるとよい feature を 2〜3 個
 提案（優先: progress 3 の一押し / 多数から参照される基盤 / overview の全体論点 / コアなのに手薄）。
 
 ### review（readiness-reviewer に委譲）
-`Agent` ツールで **`pj:readiness-reviewer`** を起動。プロンプトに「対象 = `docs/specs/`（または指定 feature）、
-レイヤー = spec」を渡す。返った判定（総合・feature 別実装可能性・重大な指摘・抜け漏れ・スコープ整合・
-過剰・次の優先順位）を**要点整理してユーザーに伝える**（重大な指摘を先頭に）。レビュー中は編集しない。
+`Agent` ツールで **`pj:readiness-reviewer`** を起動。プロンプトに「対象 = 対象 product の `docs/specs/`
+（または指定 feature）、レイヤー = spec、**product 種別 = app / package**」を渡す。返った判定（総合・
+feature 別実装可能性・重大な指摘・抜け漏れ・スコープ整合・過剰・次の優先順位）を**要点整理してユーザーに
+伝える**（重大な指摘を先頭に）。レビュー中は編集しない。
+
+**package を見るときは判定軸を1本足す**: 「**この spec だけ読んで、app を一切知らずに作れるか**」
+（concepts §2）。app の存在を前提にした記述が残っていたら、それは readiness を上げられない理由になる。
 
 ### glossary（用語整理 — terminologist で監査 ＋ 適用）
 「用語を整えて」「用語バラバラ」「用語集つくって」「命名を統一」系、または `glossary`/`terms`/`用語`。
-仕様づくりは試行錯誤で用語がバラける。それを一意に整え `docs/specs/glossary.md`（全レイヤー共通の正 →
-concepts.md §6）に固定するのは必須工程。「監査 → canonical 提案 → 適用 → glossary 構築/更新」を一括で行う。
+仕様づくりは試行錯誤で用語がバラける。それを一意に整え **対象 product の** `docs/specs/glossary.md`
+（concepts.md §10）に固定するのは必須工程。「監査 → canonical 提案 → 適用 → glossary 構築/更新」を一括で行う。
 
-1. **監査（委譲）**: `Agent` で **`pj:terminologist`** を起動（対象 = `docs/specs/`、レイヤー = spec）。
-   衝突・ゆれ・恣意的な名前・曖昧語・旧称残骸を file:line 付きで洗い出させ、canonical 用語案・glossary
-   ドラフト・改名候補を受け取る。
+> **glossary は product ごと**（concepts §10）。root には業務語彙、package にはその package の語彙だけ。
+> **package の glossary に業務語彙が現れたら違反**——これは用語のゆれではなく**境界の破れ**なので、
+> 言い換えでは直らない。spec の切り分けから直す。
+
+1. **監査（委譲）**: `Agent` で **`pj:terminologist`** を起動（対象 = 対象 product の `docs/specs/`、
+   レイヤー = spec、product 種別 = app / package）。衝突・ゆれ・恣意的な名前・曖昧語・旧称残骸を
+   file:line 付きで洗い出させ、canonical 用語案・glossary ドラフト・改名候補を受け取る。
+   **package を見るときは「app の業務語彙の混入」も必ず報告させる。**
 2. **整理して提示**: 丸投げせず要点を整理。**衝突（同一語が複数概念）と恣意的な名前を先頭に**。
    改名は「ただ揃える」でなく**悪い名前は良い名前に変える**前提で提案する。
 3. **主観の入る選択だけ確認**: 明らかなものは確定として進め、新しい呼称の選定など好みが割れるものだけ
@@ -99,14 +144,19 @@ concepts.md §6）に固定するのは必須工程。「監査 → canonical �
 5. 監査フェーズ（編集前）では編集しない。適用フェーズで初めて編集する。
 
 ### audit（ドリフト監査）
-**concepts.md §7「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は常に
-`docs/specs/` ＋ `docs/design/` ＋ `src/`）。spec から起動した場合は、報告の並び順だけ
-**受入条件まわりの乖離を先頭**にする。編集しない。
+**concepts.md §13「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
+トライアド** `docs/specs/` ＋ `docs/design/` ＋ `src/` ＋ root の作法）。product が明示されなければ
+**全 product を順に**見る。spec から起動した場合は、報告の並び順だけ**受入条件まわりの乖離を先頭**にする
+（ただし **product 境界の違反はさらにその前**・concepts §13 観点B）。編集しない。
 
-> spec が固まったら **`/pj:design` で技術を決めてから `/pj:build`** が標準導線（受け渡しの作法は concepts §3）。
+> spec が固まったら **`/pj:design` で技術を決めてから `/pj:build`** が標準導線（受け渡しの作法は concepts §7）。
 
 ## 進捗管理
 
 frontmatter は `name / progress / build_progress / updated / open_questions`。`progress`（spec readiness）の
-評価基準・運用ルール・バー表記は concepts.md §2。`build_progress` は `/pj:build` が更新するので spec では
-基本さわらない。`updated` は必ず今日の日付。overview の2軸ダッシュボードは feature 更新のたび同期。
+評価基準・運用ルール・バー表記は concepts.md §5。`build_progress` は `/pj:build` が更新するので spec では
+基本さわらない。`updated` は必ず今日の日付。**その product の**2軸ダッシュボードは feature 更新のたび同期し、
+**package を触ったら root の product 表（上段）も引き直す**（concepts §9）。
+
+**readiness は product ごとに閉じて測る**（concepts §5）。他 product の未決を持ち込まない——
+持ち込むと「この package は独立して作れるか」という問いが測れなくなる。
