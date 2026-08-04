@@ -7,8 +7,9 @@
 
 - **app / 他 feature を import しない。** 相対パスで `packages/` の外へ出ない。
   必要なものは**引数かアダプタとして注入させる**。
-- **app の業務語彙をこの package の中に持ち込まない**（spec・glossary・型名・識別子すべて）。
-  語彙の正はこの package 自身の `docs/specs/glossary.md`。
+- **app 固有の語彙をこの package の中に持ち込まない**（spec・glossary・型名・識別子すべて）。
+  ただし**この package の責務そのものの語彙は持ってよい**（組織図ライブラリが「組織」を知るように）。
+  判定は「**別の app がこのまま使えるか**」。語彙の正はこの package 自身の `docs/specs/glossary.md`。
 - **依存は一方向のみ。** 他 package への依存は `package.json` に書いたものだけ。循環させない。
 
 > 判断に迷ったら: 「これを別リポジトリに切り出したとき、そのまま動くか？」

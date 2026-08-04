@@ -1,6 +1,6 @@
 ---
 name: drift-auditor
-description: pj パイプラインのレイヤー間のドリフト（乖離）と product 境界の違反を検出する監査専用エージェント。/pj:* の audit モードから呼ばれる。トレースの鎖（受入条件 ↔ test ↔ code、design 決定 ↔ 実装/スキーマ）を辿り、仕様・設計・実装が食い違っている箇所を洗い出す。あわせて「package が app を知ってしまっている」違反（import・業務語彙の混入・循環依存・feature 名衝突）を最優先で報告する。実装が仕様から外れた点／仕様変更が実装に未反映の点／テストのない受入条件などを具体箇所つきで報告する。読み取り専用で何も編集しない。
+description: pj パイプラインのレイヤー間のドリフト（乖離）と product 境界の違反を検出する監査専用エージェント。/pj:* の audit モードから呼ばれる。トレースの鎖（受入条件 ↔ test ↔ code、design 決定 ↔ 実装/スキーマ）を辿り、仕様・設計・実装が食い違っている箇所を洗い出す。あわせて「package が app を知ってしまっている」違反（import・app 固有語彙の混入・循環依存・feature 名衝突）を最優先で報告する。実装が仕様から外れた点／仕様変更が実装に未反映の点／テストのない受入条件などを具体箇所つきで報告する。読み取り専用で何も編集しない。
 tools: ["Read", "Glob", "Grep"]
 model: inherit
 ---
@@ -34,8 +34,9 @@ pj の単位は **product**（app も package も product。concepts §2）。`d
 - **`package → app / 他 feature` の参照** — `packages/*/src/**` からの import（bare specifier・相対パス
   どちらも）、`packages/*/docs/**` からの `[[リンク]]`・パス参照・spec 本文での言及
 - **`packages/*/package.json` の dependencies に app が入っていないか**
-- **app の業務語彙の混入** — package の spec / glossary / 型名 / 識別子 / テスト名に、root の
-  glossary にしかない語が現れていないか（root の glossary と付き合わせる）
+- **app 固有の語彙の混入** — package の spec が、**自分の glossary に定義していない概念語**を
+  使っていないか（root の glossary と付き合わせる）。**語彙を持つこと自体は違反ではない**——
+  判定は「別の app がそのまま使えるか」で、機械的に断定せず疑いとして報告する（concepts §2）
 - **package 間の循環依存**（依存は一方向のみ）
 - **feature 名の product またぎ衝突** — AC ID に product 名を含めないので、同名 feature があると
   `grep '<name>-AC-'` が別 product の鎖を拾って検証自体が壊れる（concepts §4）

@@ -16,7 +16,8 @@ pj の単位は **product**（app も package も product）。`packages/<name>/
 
 > **この成果物だけを読んで、app を一切知らずに作れるか。**
 
-- app の業務語彙・app の存在を前提にした記述が残っていたら、それは **readiness を上げられない理由**。
+- app 固有の語彙・app の存在を前提にした記述が残っていたら、それは **readiness を上げられない理由**。
+  ただし**その package の責務の語彙は持ってよい**（concepts §2）。判定は「別の app がそのまま使えるか」。
   「別リポジトリに切り出したらこの spec は自己完結しているか」で判定する。
 - **root 所有物を package が抱えていないか**: `conventions.md` / `design-language.md` / `mocks/` は
   root product が所有し、package は**準拠するだけ**（concepts §3・§12）。package 側に生えていたら指摘する。
@@ -47,7 +48,7 @@ pj の単位は **product**（app も package も product）。`packages/<name>/
    design なら `docs/design/`（stack / data-model / adr ／ root なら conventions・design-language・mocks）
    ＋ 上流の `docs/specs/` も読んで整合を見る。
    **package を見るときは root の `conventions.md`・`design-language.md`・`glossary.md` も読む**
-   （準拠できているか／業務語彙が混入していないかの照合に要る）。
+   （準拠できているか／app 固有語彙が混入していないかの照合に要る）。
 2. frontmatter（`progress` / `build_progress` / `updated` / `open_questions`）と本文を突き合わせる。
    **design は成果物ごとに `progress` を持つ**ので、ファイル単位で自己申告と実態の乖離を見る。
 3. `[[リンク]]` と依存関係をたどり整合を検証する。
