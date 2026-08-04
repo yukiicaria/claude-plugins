@@ -40,15 +40,24 @@ pj が回す単位は **product**。product は spec + design + build を1周持
 
 ### product の発見（規約 — マニフェストを持たない）
 
-**`docs/specs/overview.md` を持つディレクトリが product。** 探索は次の2箇所だけ:
+**`docs/specs/overview.md` を持つディレクトリが product。** 探索は次の3箇所:
 
 ```
-docs/specs/overview.md              root product
-packages/*/docs/specs/overview.md   package product（1階層のみ）
+docs/specs/overview.md                root product
+packages/*/docs/specs/overview.md     package product
+packages/*/*/docs/specs/overview.md   グループ配下の package product
 ```
 
-`packages/a/packages/b` のような入れ子は**探索しない＝作らない**（glob と依存グラフが際限なく複雑になる）。
-別途マニフェストは持たない（二重管理は必ずズレる。**ファイルの存在が唯一の事実**）。
+- **グループ用の中間ディレクトリを1段だけ挟んでよい**（`packages/<group>/<name>/`）。
+  package が増えてきたときに束ねるため。**グループ自身は product ではない**
+  （`docs/specs/overview.md` を持たないので探索に引っかからない。ただのフォルダ）。
+- **product の中に product を置かない。** `packages/a/packages/b` のように product の配下へ
+  別の product をぶら下げる形は作らない —— 依存グラフと切り出しの単位が曖昧になる。
+  グループは product ではないので、これに当たらない。
+- **深さは packages/ 配下2段まで。** それ以上は glob と依存グラフが際限なく複雑になる。
+- 別途マニフェストは持たない（二重管理は必ずズレる。**ファイルの存在が唯一の事実**）。
+- **グループ化は任意。** 数が少ないうちはフラットでよく、深さが混在していても構わない
+  （探索は両方を見る）。先回りしてグループを作らない。
 
 ### 依存（depend）と準拠（conform）は別物
 
@@ -62,13 +71,40 @@ packages/*/docs/specs/overview.md   package product（1階層のみ）
 ESLint 設定に従うライブラリを「設定に依存している」とは言わない。だから**作法は product ではなく
 repo 全体にかかるルール**として root の `docs/design/conventions.md` に置く（§12）。
 
-**「独立して作れる」の定義**: その package の spec を読んで、**app の業務語彙を一切知らずに**作れること。
+### 「独立して作れる」の定義 — 語彙の禁止ではなく、再利用可能性
+
+**判定はこれ1つ**:
+
+> **別の app がこの package をそのまま使えるか。**
+
+**package は自分の責務のドメイン語彙を持ってよい。** 組織図ライブラリが「組織」「人」「所属」を知り、
+評価ライブラリが「評価」「評価定義」を知り、会計ライブラリが「仕訳」を知るのは**当たり前**で、
+抽象化しても表現力が増えず、利用側に包む層が生まれるだけ。
+
+**禁じられるのは app 固有の語彙**——その app の制度・他 feature の概念に依存した語。
+
+```
+持ってよい   その package の責務そのものの語彙
+             別の会社・別の app でも同じ意味で通じるもの
+
+持ってはいけない   特定 app の制度に固有の語
+                   他 feature の概念（「この app の◯◯機能で言うところの…」）
+```
+
+- **「依存がない」と「語彙を持たない」は別のことで、守るべきは前者。**
+  語彙を1語も使わない縛りは強すぎて、ドメイン特化のライブラリを一切作れなくなる。
+- **境界が疑わしいときの問い**: その語を、別の会社の同種システムがそのまま使えるか。
+  使えるなら package の語彙、使えないなら app の語彙。
+- **判定は機械では決まらない。** terminologist の判断に委ねる（§13）。
+  ただし機械で見える代理指標はある —— **package の spec に出る概念語が、その package 自身の
+  glossary に定義されているか**。定義せずに root の glossary から借りていたら、
+  それは app の語彙を使っている疑いが濃い（§10）。
 
 ### 強制（3枚）
 
 1. `packages/<name>/package.json` の dependencies に **app を書かない** → import した時点でビルドが落ちる
 2. import の方向を **lint** で塞ぐ（相対パスでの脱出を防ぐ）
-3. **pj audit** が docs レベルの違反を見る（package spec からの app 参照・業務語彙の混入。§13）
+3. **pj audit** が docs レベルの違反を見る（package spec からの app 参照・app 固有語彙の混入。§13）
 
 ## 3. 1つの真実の3レイヤー（トレース可能）
 
@@ -266,13 +302,16 @@ feature 1個分しか中身がなく、器だけが増える。
 spec の本文だけでなく、**design のスキーマ名・コードの識別子も同じ語に従う**。曖昧/衝突/恣意的な名前は
 **terminologist**（§13）で横断監査し、canonical 用語に寄せる。用語の一意性は実装の誤りを防ぐ最重要要素。
 
-**なぜ1つにまとめないか（product モデルの肝）**: package は app の業務語彙を知らない（§2）。
-glossary が repo に1つだと業務語彙と package 語彙が同じファイルに並び、**混入を止める手段が無くなる**。
-product ごとに分けると、**語彙の境界が物理的に強制される**。
+**なぜ1つにまとめないか（product モデルの肝）**: 1ファイルだと app 固有の語と package の語が
+同じ場所に並び、**どちらの責務の語かが判別できなくなる**。product ごとに分けると、
+**語彙の帰属が物理的にはっきりする**。
 
-- **root product の glossary** — 業務語彙（例: 人事評価・報酬・雇用形態）
-- **package product の glossary** — その package が扱う語彙だけ（例: workflow なら 申請・承認・差し戻し）
-- **package の glossary に業務語彙が現れたら違反**。audit / terminologist が検出する（§13）
+- **root product の glossary** — その app 固有の語（制度・業務の運用に固有のもの）
+- **package product の glossary** — その package の責務の語彙
+  （workflow なら 申請・承認・差し戻し。評価ライブラリなら 評価・評価定義）
+- **package が自分の glossary に定義していない概念語を spec 本文で使っていたら要調査**（§13）。
+  root の glossary から借りているなら、app の語彙を使っている疑いが濃い。
+  **自分の責務の語なら、自分の glossary に定義すればよい**（§2 —— 語彙を持つこと自体は違反ではない）。
 - 同じ語が複数 product に現れること自体は問題ない（各 product 内で一意なら可）。
   ただし**意味が違う同語**は事故のもとなので terminologist が指摘する。
 
@@ -335,7 +374,10 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
   `UX-NN ↔ 実装`）＋ `design 決定 ↔ 実装・スキーマ`。**ID が増えたら鎖も増える**（列挙を正にしない）
 - 観点B（**product 境界**・product モデル固有）: §2 の向きが破れていないか。
   - `package → app / 他 feature` の **import・`[[リンク]]`・spec からの参照**
-  - package の spec / glossary への**業務語彙の混入**（§10）
+  - **app 固有の語彙の混入** — package の spec が、**自分の glossary に定義していない概念語**を
+    使っていないか。root の glossary にしか定義が無い語を借りていたら要調査。
+    ただし**自分の責務の語彙を持つこと自体は違反ではない**（§2）。
+    「別の app がこのまま使えるか」で判定し、機械的に断定しない（§10）
   - **package 間の循環**、`packages/*/package.json` に app 依存が書かれていないか
   - **feature 名の product またぎ衝突**（§4）
   - root の作法（conventions）に**準拠していない** product
@@ -358,7 +400,8 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
 **product モデル固有（§2）**:
 
 - **package から app / 他 feature を参照する**（import・`[[リンク]]`・spec からの言及。向きが壊れる）
-- **package の spec / glossary に app の業務語彙を持ち込む**（§10）
+- **package の spec / glossary に app 固有の語彙を持ち込む**（§10）。
+  ただし**自分の責務の語彙を持つのは違反ではない**——「業務語彙だから」で機械的に弾かない（§2）
 - **「全 package 共通の◯◯」を app の spec に書く**（作法は root の `conventions.md`・§12）
 - **上段ダッシュボード（product 表）を手で動かす**（下段が正・上段は導出・§9）
 - **先回りして `features/` に割る**（小さい product は overview 1枚でよい・§6）
@@ -426,7 +469,8 @@ pj で運用するプロジェクトは、**ルート `CLAUDE.md`（毎セッシ
 
 **単位は product**（spec+design+build を1周持ち、独立して作れる）。リポジトリのゴール本体が root product、
 自分で作るライブラリは `packages/<name>/` に置く product。**feature は product の中の振る舞いの単位**。
-- **package は app を知らない**（import も spec からの参照も業務語彙もゼロ）。app は package を install して使う。
+- **package は app を知らない**（import も spec からの参照もゼロ）。app は package を install して使う。
+  判定は「**別の app がそのまま使えるか**」。package が自分の責務のドメイン語彙を持つのは構わない。
 - 全 product が従う作法は `docs/design/conventions.md`（root）1箇所。これは準拠であって依存ではない。
 - 新しいライブラリを作りたくなったら **`/pj:setup package <name>`**。
 

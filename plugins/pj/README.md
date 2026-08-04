@@ -35,7 +35,8 @@ pj が回す単位は **product** — spec + design + build を1周持ち、**�
 
 肝は **依存（depend）と準拠（conform）の区別**:
 
-- **依存** — `feature → package` は OK。**`package → app` は禁止**（import も spec 参照も業務語彙も）。
+- **依存** — `feature → package` は OK。**`package → app` は禁止**（import も spec 参照も app 固有語彙も）。
+  package が自分の責務のドメイン語彙を持つのは構わない（判定は「別の app がそのまま使えるか」）。
   `package.json` の依存・import lint・pj audit の3枚で強制する。
 - **準拠** — 全 product が root の `docs/design/conventions.md`（作法）と `design-language.md`（視覚の正）に従う。
   **これは依存ではない**（ESLint 設定に従うライブラリを「設定に依存している」とは言わない）。

@@ -25,7 +25,7 @@ design レイヤー（`/pj:design` → `docs/design/`）の仕事。「何を作
 
 pj の単位は **product**（app も package も product）。**どの product の spec の話かを最初に決める。**
 
-1. **product を列挙する**: `docs/specs/overview.md` と `packages/*/docs/specs/overview.md` を glob
+1. **product を列挙する**: `docs/specs/overview.md` ＋ `packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob
    （これが product の定義。マニフェストは無い）。
 2. **対象を決める**: 引数に product 名／`packages/<name>` があればそれ。無ければ **root product** を既定にする。
    ただし直近の文脈が特定 package の話なら、それを候補として**一言だけ確認**する。
@@ -33,7 +33,8 @@ pj の単位は **product**（app も package も product）。**どの product 
 
 **package product を扱うときの追加規律**（root product には不要）:
 
-- **app の業務語彙を書かない。** 書けないなら、それは package ではなく app の feature（切り分けを見直す）
+- **app 固有の語彙を書かない。** ただし**その package の責務の語彙は書いてよい**（concepts §2）。
+  判定は「別の app がそのまま使えるか」。特定 app の制度でしか説明できないなら、それは feature
 - **app / 他 feature を `[[リンク]]` で参照しない**（向きが壊れる・concepts §2）
 - 全 product 共通の作法は **root の `docs/design/conventions.md`** が正。ここに写さない（concepts §12）
 - readiness は「**app を知らずにこの package を作れるか**」でも測る（concepts §5）
@@ -121,14 +122,14 @@ feature 別実装可能性・重大な指摘・抜け漏れ・スコープ整合
 仕様づくりは試行錯誤で用語がバラける。それを一意に整え **対象 product の** `docs/specs/glossary.md`
 （concepts.md §10）に固定するのは必須工程。「監査 → canonical 提案 → 適用 → glossary 構築/更新」を一括で行う。
 
-> **glossary は product ごと**（concepts §10）。root には業務語彙、package にはその package の語彙だけ。
-> **package の glossary に業務語彙が現れたら違反**——これは用語のゆれではなく**境界の破れ**なので、
-> 言い換えでは直らない。spec の切り分けから直す。
+> **glossary は product ごと**（concepts §10）。root には app 固有の語、package にはその責務の語彙。
+> **package が自分の glossary に定義していない概念語を使っていたら要調査**——app の語を借りているなら
+> 境界の破れで、言い換えでは直らない（spec の切り分けから直す）。**自分の責務の語なら定義すればよい**。
 
 1. **監査（委譲）**: `Agent` で **`pj:terminologist`** を起動（対象 = 対象 product の `docs/specs/`、
    レイヤー = spec、product 種別 = app / package）。衝突・ゆれ・恣意的な名前・曖昧語・旧称残骸を
    file:line 付きで洗い出させ、canonical 用語案・glossary ドラフト・改名候補を受け取る。
-   **package を見るときは「app の業務語彙の混入」も必ず報告させる。**
+   **package を見るときは「app 固有の語彙の混入」も必ず報告させる**（自分の責務の語彙は違反ではない）。
 2. **整理して提示**: 丸投げせず要点を整理。**衝突（同一語が複数概念）と恣意的な名前を先頭に**。
    改名は「ただ揃える」でなく**悪い名前は良い名前に変える**前提で提案する。
 3. **主観の入る選択だけ確認**: 明らかなものは確定として進め、新しい呼称の選定など好みが割れるものだけ

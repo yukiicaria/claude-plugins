@@ -14,7 +14,7 @@ spec と design を実コードに落とすコマンド。テストファース�
 共通の軸・モード・保守規律・禁止事項は **`../../_shared/concepts.md`**（pj パイプラインの背骨）。
 
 **まず対象 product を決める**（concepts §2）。`docs/specs/overview.md` と
-`packages/*/docs/specs/overview.md` を glob して product を列挙し、引数の feature 名がどの product の
+`packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob して product を列挙し、引数の feature 名がどの product の
 ものかで決める（同名 feature は repo 内で禁止なので一意に定まる・concepts §4）。**一行宣言してから動く。**
 
 build は spec・design の**下流**。実装に入る前に必ず両方を読む（パスは**対象 product 相対**）:
@@ -38,7 +38,7 @@ WHAT でも HOW でも、**変えたくなったら build で辻褄を合わせ�
 
 - **app / 他 feature を import していない。** 相対パスで `packages/<name>/` の外へ出ていない
 - **`package.json` の dependencies に書いたものしか使っていない**（bare specifier で解決できる）
-- **app の業務語彙が型名・識別子・テスト名に混ざっていない**
+- **app 固有の語彙が型名・識別子・テスト名に混ざっていない**（その package の責務の語彙は可）
 - 外界（永続・外部送信・ドメイン解決）は**注入**で受け取っている
 
 > 判断に迷ったら: 「これを別リポジトリに切り出したとき、そのまま動くか？」
