@@ -194,6 +194,20 @@ design が固まったら **`/pj:build <feature>` で受入条件を test に写
 （受け渡しの作法は concepts §7）。大物 feature の事前 orientation が欲しいときは
 `/pj:build plan <feature>`（コードを書かず計画だけ出す）を使う。
 
+> **その前に `/pj:setup stack` が要ることがある。** **このスキルはコードを書かない**ので、
+> `stack.md` で FW・DB・ORM・テストランナーを決めても**実体は生まれていない**。
+> `/pj:build` は「動くプロジェクトがある」前提で受入条件を test に写すので、土台が無いと始まらない。
+>
+> **stack.md を書いた・更新したら、実体があるか確認して案内する:**
+>
+> ```
+> stack.md の採用技術が package.json の依存に入っているか
+> テストランナーが起動するか
+> ```
+>
+> 入っていなければ **`/pj:setup stack`** を案内する（このスキルは入れない。決めるのが仕事）。
+> **「決めたのに入っていない」状態を黙って build に渡さない。**
+
 ## 設計の確定度（格納先は concepts.md §5 の表）
 
 **成果物ごとに frontmatter の `progress` を持つ**: `stack.md` / `data-model.md` ／ **root なら**

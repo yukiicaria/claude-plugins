@@ -59,6 +59,20 @@ docs/specs/
   （specs-CLAUDE.md は `docs/specs/CLAUDE.md` として配置）
 - **package product**: **package-overview.md** を `overview.md` として ／ glossary.md / specs-CLAUDE.md
   （package の器は本来 `/pj:setup package <name>` が作る。ここで作るのは取りこぼしの補完）
+
+> **器の不在を黙って埋めない。** このスキルが作れるのは `docs/` だけで、
+> **`package.json` / workspace 登録 / 依存方向の lint は作れない**（`/pj:setup` の担当）。
+> docs だけ作って器が無い状態を放置すると、**spec が完成しているのに実装できない product** が育つ。
+>
+> **package の docs を作った・触ったら、毎回「器があるか」を確認して報告する:**
+>
+> ```
+> packages/<name>/package.json があるか
+> root の workspaces glob（packages/* と packages/*/*）に載っているか
+> ```
+>
+> 無ければ**そのターンの報告に明記し、`/pj:setup package <name>`（既存なら `/pj:setup sync`）を案内する**。
+> 会話の流れは止めなくてよいが、**黙って進めない**。
 あわせて**プロジェクト root の `CLAUDE.md` に運用宣言の管理ブロックを stamp** する（concepts.md §16。無ければ
 作る・既にマーカーがあれば重複させない）。これにより規律を知らない人・新しいセッションが必ず入口（`/pj:change`）に
 着地できる。対話・軽量修正の編集系フローでも、管理ブロックが無ければ同様に stamp する。
@@ -103,6 +117,11 @@ docs/specs/
 concepts.md §8 の手順に従う（スコープ判定 → 該当 feature 特定 → 更新 → 変更履歴 → updated → 影響1個提示）。
 **受入条件（AC-NN）を増やす/廃止する修正はこのモードで処理しない**。採番規律を一箇所に保つため
 `/pj:change` に渡す（concepts.md §7 モード5 / §4）。文言の明確化など ID を動かさない修正はここで即時反映してよい。
+
+> **ただし「新規に書き起こす」は別**（concepts §4）。まだ ID 付きの受入条件が1つも無い feature に
+> 初めて書き出すときは、**このスキルが採番する**。`/pj:change` に回すと、書いた直後の spec に
+> ID の無い受入条件が残り、鎖が切れる。**「ドラフト（ID 未採番）」という状態を作らない。**
+> 判定は「**その feature に ID 付きの受入条件が1つでもあるか**」——無ければ spec、あれば change。
 
 ### status / next
 読むだけ。status は2軸ダッシュボード＋未確定の全体論点。next は次に詰めるとよい feature を 2〜3 個
