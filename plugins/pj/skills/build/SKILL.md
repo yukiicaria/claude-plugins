@@ -20,10 +20,10 @@ spec と design を実コードに落とすコマンド。テストファース�
 build は spec・design の**下流**。実装に入る前に必ず両方を読む（パスは**対象 product 相対**）:
 - `docs/specs/`（WHAT — 特に対象 feature の受入条件）
 - `docs/design/`（HOW — stack / data-model / 関連 ADR。これが拘束条件）
-- **root の `docs/design/conventions.md`**（全 product が準拠する作法・concepts §12）と、
+- **root の `docs/design/conventions.md`**（全 product が準拠する作法・concepts §13）と、
   UI を実装するなら **root の `docs/design/design-language.md`**（視覚の正）
 
-**UI を実装するときは `../../_shared/visual.md` も読む**（§V1 視覚の正 / §V2 モック）。
+**UI を実装するときは `../../_shared/visual.md` も読む**（§V1 視覚の正 / §V2 intake）。
 UI に触れない feature（API・バッチ等）では読まなくてよい。
 
 WHAT でも HOW でも、**変えたくなったら build で辻褄を合わせず `/pj:change` に投げる**（concepts.md §8）。
@@ -43,6 +43,19 @@ WHAT でも HOW でも、**変えたくなったら build で辻褄を合わせ�
 
 > 判断に迷ったら: 「これを別リポジトリに切り出したとき、そのまま動くか？」
 > 動かないなら app を知ってしまっている。**辻褄を合わせず `/pj:change` に投げる。**
+
+## 置き場は表を引くだけ。新しい箱を作らない（concepts §12）
+
+**実装を置く場所は root の `docs/design/conventions.md` の「配置の表」が決める。**
+build は表を引くだけで、**新しいトップレベルのディレクトリを作らない**。
+
+- 表に無いものが要ると気づいたら、**その場で作らず `/pj:change` に投げる**（作法＝ HOW の変更）。
+- 迷ったら concepts §12 の3分類で当てる: **挙動**（テストできる）／ **見た目**（全画面に効く）／
+  **まとめる**（上2つを繋ぐだけ）。3つのどれにも当てはまらないなら、分類のほうが間違っている。
+- **package の中身も同じ分類で組む。** 完了条件は「別リポジトリに install してそのまま動くか」（§2）。
+
+> これを怠ると、置き場の無いコードがその場しのぎの新ディレクトリを生み、
+> **次に触る人が「なぜここにあるか」を辿れなくなる**。
 
 ## build の中心契約: 受入条件 → test → code
 
@@ -71,13 +84,14 @@ feature 名が無ければ next の結果から「どれを実装します?」�
    - **UI を実装するとき**は `docs/design/design-language.md`（視覚の正・visual.md §V1）を正とし、満たす原則を
      共通コンポーネント先頭に `@satisfies DL-NN` で注釈する。完了前に **`pj:design-reviewer`** で違反ゼロを確認
      （コード品質は従来どおり `/code-review` `/security-review` `/verify`）。
-   - **対象画面に `docs/design/mocks/<mock-id>/` があれば、実装前に `mock.md` と `index.html` を必ず読む**
-     （visual.md §V2）。運用は2行: **モックを忠実に再現する / DS があれば語彙とトークンをそれに当てる**。
-     - **既定は全部再現**。配置・列順・密度・寸法を「どこがこだわりか」で選り分けない。
-     - **挙動（UX-NN）は落としやすい**（ジェスチャ・閾値・スクロール同期・オーバーレイの位置決め）。
-       実装したら `@satisfies <mock-id>-UX-NN` を注釈し、**全 UX-NN に注釈があること**を grep で確認する。
-     - DS を当てるとモックの意図が壊れる箇所が出たら、**黙って折衷せず** `/pj:change` で DL-NN を1本足して記録する。
-     - モックを見て**振る舞い（WHAT）の誤り**に気づいたら build で辻褄を合わせず `/pj:change` へ。
+   - **対象に `docs/design/intake/<intake-id>/` があれば、実装前に `intake.md` と実体を必ず読む**
+     （visual.md §V2）。**拘束範囲は忠実度（fidelity）が決める**:
+     `sketch` = 構造と並び順 / `structure` = ＋挙動 / `hifi` = ＋明記された寸法・閾値・時間。
+     - **`hifi` なら数値を落とさない。** 数値は `intake.md` の振り分け表から **AC** を辿る
+       （表に無い数値を実体から目測で拾わない）。
+     - **部品が DS に置き換わるのは正常。配置・列順・密度が変わるのは違反。** ここを取り違えない。
+     - DS を当てると出典の意図が壊れる箇所が出たら、**黙って折衷せず** `/pj:change` で DL-NN を1本足して記録する。
+     - 出典を見て**振る舞い（WHAT）の誤り**に気づいたら build で辻褄を合わせず `/pj:change` へ。
 6. **同期**: 全受入条件テストが緑になったら
    - 対象 feature の `build_progress` を更新（concepts.md §5。5 = 全受入条件テスト緑）
    - **その product の** overview の2軸ダッシュボードの build 列を更新（**進捗の正はここ**。
@@ -103,10 +117,10 @@ build 側で層を選び分けない。
 ### review / audit
 - review はコード品質の確認。専用 agent を作らず**既存の `/code-review` `/security-review` `/verify`
   に委譲**する（再発明しない）。
-- audit は **concepts.md §13「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
+- audit は **concepts.md §14「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
   トライアド** `docs/specs/` ＋ `docs/design/` ＋ `src/` ＋ root の作法）。product が明示されなければ
   **全 product を順に**見る。実装と仕様/設計の乖離を報告し、**product 境界の違反はその前に**出す
-  （concepts §13 観点B）。編集しない。
+  （concepts §14 観点B）。編集しない。
 
 ## 進捗管理
 

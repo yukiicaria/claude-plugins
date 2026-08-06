@@ -36,7 +36,7 @@ pj の単位は **product**（app も package も product）。**どの product 
 - **app 固有の語彙を書かない。** ただし**その package の責務の語彙は書いてよい**（concepts §2）。
   判定は「別の app がそのまま使えるか」。特定 app の制度でしか説明できないなら、それは feature
 - **app / 他 feature を `[[リンク]]` で参照しない**（向きが壊れる・concepts §2）
-- 全 product 共通の作法は **root の `docs/design/conventions.md`** が正。ここに写さない（concepts §12）
+- 全 product 共通の作法は **root の `docs/design/conventions.md`** が正。ここに写さない（concepts §13）
 - readiness は「**app を知らずにこの package を作れるか**」でも測る（concepts §5）
 
 ## ファイル構造
@@ -73,7 +73,7 @@ docs/specs/
 >
 > 無ければ**そのターンの報告に明記し、`/pj:setup package <name>`（既存なら `/pj:setup sync`）を案内する**。
 > 会話の流れは止めなくてよいが、**黙って進めない**。
-あわせて**プロジェクト root の `CLAUDE.md` に運用宣言の管理ブロックを stamp** する（concepts.md §16。無ければ
+あわせて**プロジェクト root の `CLAUDE.md` に運用宣言の管理ブロックを stamp** する（concepts.md §17。無ければ
 作る・既にマーカーがあれば重複させない）。これにより規律を知らない人・新しいセッションが必ず入口（`/pj:change`）に
 着地できる。対話・軽量修正の編集系フローでも、管理ブロックが無ければ同様に stamp する。
 
@@ -108,7 +108,7 @@ docs/specs/
   進捗は2軸ダッシュボードのみ）。**package を触ったら続けて root の product 表（上段）も引き直す**
   （下段が正・上段は導出。concepts §9）
 - 「これは全 package 共通の話だ」と気づいたら spec に書かず **root の `docs/design/conventions.md`** へ
-  送る（concepts §12）。ここで抱え込むとレイヤー違反になる
+  送る（concepts §13）。ここで抱え込むとレイヤー違反になる
 - 「これは app を知らずに作れる独立したライブラリだ」と見えてきたら、**`/pj:setup package <name>`** を
   案内する（器を作ってから中身を書く）
 - **前提を壊して作り直すことを恐れない**（concepts.md §8）。作り直したら変更履歴と関連 feature を追って直す
@@ -164,10 +164,10 @@ feature 別実装可能性・重大な指摘・抜け漏れ・スコープ整合
 5. 監査フェーズ（編集前）では編集しない。適用フェーズで初めて編集する。
 
 ### audit（ドリフト監査）
-**concepts.md §13「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
+**concepts.md §14「audit の起動仕様」に従う**（全 skill 共通の1つの監査。対象は**対象 product の
 トライアド** `docs/specs/` ＋ `docs/design/` ＋ `src/` ＋ root の作法）。product が明示されなければ
 **全 product を順に**見る。spec から起動した場合は、報告の並び順だけ**受入条件まわりの乖離を先頭**にする
-（ただし **product 境界の違反はさらにその前**・concepts §13 観点B）。編集しない。
+（ただし **product 境界の違反はさらにその前**・concepts §14 観点B）。編集しない。
 
 > spec が固まったら **`/pj:design` で技術を決めてから `/pj:build`** が標準導線（受け渡しの作法は concepts §7）。
 

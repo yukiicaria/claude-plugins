@@ -38,7 +38,7 @@
 
 ## 準拠する作法
 
-> 作法は root の `docs/design/conventions.md` が正（concepts §12）。ここには**従っている項目名だけ**書く。
+> 作法は root の `docs/design/conventions.md` が正（concepts §13）。ここには**従っている項目名だけ**書く。
 > 内容を写すとそこがドリフトする。
 
 - <作法名>

@@ -8,13 +8,13 @@ updated: YYYY-MM-DD
 > spec が「実装裁量」と投げた**横断項目を1回ここで決め、全 feature で統一**する。
 > 各実装にゆだねるとバラつく事故を防ぐのが目的。
 >
-> **このファイルは root product が所有し、repo の全 product が準拠する**（concepts §12）。
+> **このファイルは root product が所有し、repo の全 product が準拠する**（concepts §13）。
 > package も従うが、**従うことは依存ではない**。package を切り出すときは、baked-in の設計判断として
 > その package の `docs/design/` へ写して連れて行く。
 
 ## product 構成（repo にライブラリを持つ場合）
 
-> **「全 package 共通の◯◯」と書きたくなったものは、app の spec ではなく必ずここに来る**（concepts §12）。
+> **「全 package 共通の◯◯」と書きたくなったものは、app の spec ではなく必ずここに来る**（concepts §13）。
 > 該当が無ければこの節ごと削ってよい。
 
 - **package の分割の型** … <コア / UI / アダプタ の分け方など>

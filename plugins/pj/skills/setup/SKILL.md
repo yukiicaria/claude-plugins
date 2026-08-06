@@ -15,7 +15,7 @@ allowed-tools: Bash(*), Write, Edit, Read, Glob
 
 ## 最初に必ず読む
 
-共通の軸・モード・保守規律・**運用宣言の管理ブロック（§16）**は **`../../_shared/concepts.md`**
+共通の軸・モード・保守規律・**運用宣言の管理ブロック（§17）**は **`../../_shared/concepts.md`**
 （pj パイプラインの背骨）。起動したらまず読む。**デザインシステムを導入する（E）なら
 `../../_shared/visual.md` §V1（視覚の正・DS の3スロット契約）も読む。** UI を持たない（CLI 等）なら不要。
 
@@ -76,7 +76,8 @@ git リポジトリでなければ `git init`。**アカウントの識別情報
 ## B. 足回りのファイル（存在しなければ作成・あれば不足分のみ追記）
 
 1. **.gitignore** — node_modules / bun.lockb / dist / build / out / .next / .cache / .env* / *.log /
-   .DS_Store / coverage / *.tsbuildinfo / .vscode / .idea / **.claude/settings.local.json**
+   .DS_Store / coverage / *.tsbuildinfo / .vscode / .idea / **.claude/settings.local.json** /
+   **design-inbox/**
 2. **package.json**（無ければ。name = ディレクトリ名）— scripts: `format`(prettier --write .) /
    `lint`(eslint .) / `type-check`(tsc --noEmit) / `prepare`(husky)。devDeps: husky / lint-staged /
    prettier / eslint / @eslint/js / @typescript-eslint/{eslint-plugin,parser}。
@@ -84,6 +85,18 @@ git リポジトリでなければ `git init`。**アカウントの識別情報
 3. **tsconfig.json**（無ければ）— strict / ESNext / bundler / outDir dist / rootDir src。
 4. **eslint.config.js**（無ければ）— @eslint/js recommended ＋ @typescript-eslint recommended。
 5. **.prettierrc** / **.prettierignore**（無ければ）— semi / singleQuote / printWidth 100 / tabWidth 2。
+
+6. **design-inbox/**（無ければ）— **外から来た設計成果物の受け口**（visual.md §V2）。
+   Artifact のエクスポート・ハンドオフ・スクリーンショットを**そのまま置く場所**。
+   **gitignore する**（ここは作業場であって正ではない）。`README.md` を1枚だけ置き、次を書く:
+
+   > ここに置いたものは `/pj:design intake <パス>` で取り込む。取り込むと、忠実度を宣言したうえで
+   > `<product>/docs/design/intake/<id>/` に**出典として保存**され、中身は `AC-NN` / `DL-NN` に振り分けられる。
+   > **取り込むまでは何の拘束力も無い。** 取り込んだらここからは消してよい。
+
+   - **`docs/design/intake/` は先回りして作らない。** 取り込むときに `/pj:design intake` が作る
+     （必要になってから作る・§V2）。
+   - UI を持たないプロジェクトでは作らなくてよい。
 
 既存ファイルは `allow`・scripts・devDependencies など**不足エントリのみ追記**（既存は消さない）。
 
@@ -100,7 +113,7 @@ CLAUDE.md が無ければ作る。**マーカー外（人間の領域）**に検
 Architecture はスタブ可）＋ Commit Rules（husky の pre-commit/pre-push）・Branch Strategy（main 直 push 禁止 /
 develop 起点 / feature・fix）・「bun を使う／`--no-verify` 禁止」を書く。
 
-そのうえで **concepts.md §16 の正準な管理ブロックを stamp** する（`<!-- pj:managed start -->`〜`end`）。
+そのうえで **concepts.md §17 の正準な管理ブロックを stamp** する（`<!-- pj:managed start -->`〜`end`）。
 既にマーカーがあれば重複させない。これにより、**普通のセッションや新しい人も入口（`/pj:change`）に必ず着地**する。
 CLAUDE.md が既存の場合は中身を作り直さず、管理ブロックの stamp だけ行う。
 
@@ -118,7 +131,7 @@ CLAUDE.md が既存の場合は中身を作り直さず、管理ブロックの 
 | **正の宣言** | 視覚の正にベース語彙を固定 | `docs/design/design-language.md` §F に「語彙・トークンの正 = <DS>」を書く |
 
 > **強制（lint で生 color・生 svg・別ライブラリをブロック）はこのスキルでは入れない。**
-> 当面は導線（design-language / CLAUDE.md ポインタ）＋ audit の `pj:design-reviewer`（concepts §13）で運用する
+> 当面は導線（design-language / CLAUDE.md ポインタ）＋ audit の `pj:design-reviewer`（concepts §14）で運用する
 > （oyster README と同じ「まず warning、ブロックは規律が固まってから」方針）。
 
 ユーザーに確認する: 「デザインシステムは? **① 既存を入れる（例: oyster-lib）／② preset（外部DSなし）**」
@@ -188,7 +201,7 @@ packages/<name>/
 ```
 
 - **`docs/design/conventions.md` と `design-language.md` は作らない。** root 所有で、この package は
-  **準拠する側**（concepts §3・§12）。`docs/design/CLAUDE.md` にその旨を1行書く。
+  **準拠する側**（concepts §3・§13）。`docs/design/CLAUDE.md` にその旨を1行書く。
 - **`docs/specs/features/` は作らない。** overview 1枚から始め、育ったら割る（concepts §6）。
 - data-model / stack は**この package が必要になってから** `/pj:design` が作る（先回りしない）。
 

@@ -16,9 +16,10 @@ model: inherit
 - **glossary ↔ 全レイヤーの識別子** — 用語の不一致は terminologist と重複してよいが、構造的ズレは拾う
 - **design-language（DL-NN） ↔ コンポーネント/使用箇所** — 各 DL に実現コンポーネントがあるか（`@satisfies DL-NN`）、
   UI が DL に違反していないか（視覚の深掘りは `design-reviewer` に委譲してよい。ここでは鎖の切れ目＝未実現 DL を拾う）
-- **モック（UX-NN） ↔ 実装** — `docs/design/mocks/<mock-id>/mock.md` の各 UX-NN に `@satisfies <mock-id>-UX-NN`
-  があるか Grep で突合する。**注釈の無い UX-NN は「実装から落ちた挙動」**（操作しないと気づけないので鎖が唯一の検出手段）。
-  モックが更新されたのに実装が追従していない／実装が変わったのにモックが古い、の両方向を見る（構成の突き合わせは
+- **取り込んだ出典 ↔ 実装** — `docs/design/intake/<intake-id>/intake.md` の**振り分け表**を読み、
+  そこから起こした `AC-NN` / `DL-NN` が実装に届いているか突合する。**忠実度（fidelity）が拘束範囲**で、
+  `hifi` なら明記された寸法まで、`sketch` なら構造だけを見る。
+  出典が更新されたのに実装が追従していない／実装が変わったのに出典が古い、の両方向を見る（構成の突き合わせは
   `design-reviewer` に委譲してよい）
 
 ## product 境界（鎖より先に見る）
@@ -41,8 +42,8 @@ pj の単位は **product**（app も package も product。concepts §2）。`d
 - **package 間の循環依存**（依存は一方向のみ）
 - **feature 名の product またぎ衝突** — AC ID に product 名を含めないので、同名 feature があると
   `grep '<name>-AC-'` が別 product の鎖を拾って検証自体が壊れる（concepts §4）
-- **root 所有物の重複所有** — package 側に `conventions.md` / `design-language.md` / `mocks/` が
-  生えていないか（これらは root product が所有し、他は準拠するだけ。concepts §3・§12）
+- **root 所有物の重複所有** — package 側に `conventions.md` / `design-language.md` が
+  生えていないか（これらは root product が所有し、他は準拠するだけ。concepts §3・§13）
 
 ## やること
 

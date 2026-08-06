@@ -98,7 +98,7 @@ packages/*/*/docs/specs/overview.md   グループ配下の package product
 | **準拠** | repo の建て方のルール（作法）に従う | 全 product → 作法。**これは依存ではない** |
 
 ESLint 設定に従うライブラリを「設定に依存している」とは言わない。だから**作法は product ではなく
-repo 全体にかかるルール**として root の `docs/design/conventions.md` に置く（§12）。
+repo 全体にかかるルール**として root の `docs/design/conventions.md` に置く（§13）。
 
 ### 「独立して作れる」の定義 — 語彙の禁止ではなく、再利用可能性
 
@@ -124,7 +124,7 @@ repo 全体にかかるルール**として root の `docs/design/conventions.md
   語彙を1語も使わない縛りは強すぎて、ドメイン特化のライブラリを一切作れなくなる。
 - **境界が疑わしいときの問い**: その語を、別の会社の同種システムがそのまま使えるか。
   使えるなら package の語彙、使えないなら app の語彙。
-- **判定は機械では決まらない。** terminologist の判断に委ねる（§13）。
+- **判定は機械では決まらない。** terminologist の判断に委ねる（§14）。
   ただし機械で見える代理指標はある —— **package の spec に出る概念語が、その package 自身の
   glossary に定義されているか**。定義せずに root の glossary から借りていたら、
   それは app の語彙を使っている疑いが濃い（§10）。
@@ -133,7 +133,7 @@ repo 全体にかかるルール**として root の `docs/design/conventions.md
 
 1. `packages/<name>/package.json` の dependencies に **app を書かない** → import した時点でビルドが落ちる
 2. import の方向を **lint** で塞ぐ（相対パスでの脱出を防ぐ）
-3. **pj audit** が docs レベルの違反を見る（package spec からの app 参照・app 固有語彙の混入。§13）
+3. **pj audit** が docs レベルの違反を見る（package spec からの app 参照・app 固有語彙の混入。§14）
 
 ## 3. 1つの真実の3レイヤー（トレース可能）
 
@@ -146,17 +146,18 @@ repo 全体にかかるルール**として root の `docs/design/conventions.md
 | レイヤー | 問い | スキル | 成果物 |
 |---|---|---|---|
 | **spec**   | 何を・どう振る舞うか | `/pj:spec`   | `docs/specs/`（overview / features / glossary） |
-| **design** | どの技術で・どんな構造で | `/pj:design` | `docs/design/`（stack / data-model / adr ／ **root のみ**: conventions・design-language・mocks） |
+| **design** | どの技術で・どんな構造で | `/pj:design` | `docs/design/`（stack / data-model / adr / intake ／ **root のみ**: conventions・design-language） |
 | **build**  | 実際に作る（テスト先行） | `/pj:build`  | `src/` + テスト（状態は自 product の overview ダッシュボードに反映） |
 
 **root product だけが持つもの**（全 product が**準拠**する。所有は root・§2）:
-`docs/design/conventions.md`（作法）・`docs/design/design-language.md`（視覚の正・DL-NN）・`docs/design/mocks/`。
+`docs/design/conventions.md`（作法）・`docs/design/design-language.md`（視覚の正・DL-NN）。
+**`docs/design/intake/` は product ごと**（package も持つ・visual.md §V2）。
 package はこれらを**参照するが所有しない**（package ごとに視覚の正を持つと DS が割れる）。
 
 **トレースの鎖（保守の基盤）**:
 - `受入条件（spec） ↔ test ↔ code` — 受入条件が変われば test を直し、test が変われば code を直す
 - `design 決定 ↔ コードモジュール / スキーマ` — design が変われば該当 code を直す
-- `DL-NN ↔ コンポーネント`（視覚・横断／visual.md §V1）・`UX-NN ↔ 実装`（体験・画面固有／visual.md §V2）
+- `DL-NN ↔ コンポーネント`（視覚・横断／visual.md §V1）
 - 各成果物は `[[リンク]]` と file:line で互いを指す。鎖が切れた状態を「ドリフト」と呼ぶ（§8）
 - 鎖は**安定 ID** で機械検証可能にする。ID の形式・採番者・不変ルールは **§4 が唯一の定義**。
 
@@ -169,7 +170,6 @@ package はこれらを**参照するが所有しない**（package ごとに視
 |---|---|---|---|---|
 | `(<feature>-AC-NN)` | 受入条件 | 対象 product の `docs/specs/features/<feature>.md`（spec が1ファイルのうちは `overview.md`・§6） | test 名 / コメント | **新規は `/pj:spec`・増減は `/pj:change`** |
 | `(DL-NN)` | デザイン原則・トークン・コンポーネント語彙（**横断**） | **root product の** `docs/design/design-language.md` | コンポーネント先頭の `@satisfies DL-NN`（**どの product のコードでも可**） | **`/pj:design`・`/pj:change`** |
-| `(<mock>-UX-NN)` | モックの**挙動**のうち静的に見比べても検出できないもの（**画面固有**・visual.md §V2） | `docs/design/mocks/<mock>/mock.md` | 実装コードの `@satisfies <mock>-UX-NN` | **`/pj:design`・`/pj:change`** |
 
 **全 ID 共通の不変ルール**:
 - **一度振った ID は変えない。** 廃止したら**欠番**にし、**再利用しない**（欠番はその旨を明記する）。
@@ -192,7 +192,7 @@ package はこれらを**参照するが所有しない**（package ごとに視
   同名 feature が2つあると `grep 'workflow-AC-'` が別 product の鎖を拾って検証が壊れる。
   ID に product prefix を足さないのは、**package を切り出したとき ID をそのまま生かす**ため
   （prefix を付けると切り出しのたびに全 ID を振り直すことになり、「一度振った ID は変えない」と衝突する）。
-  衝突は audit が検出する（§13）。
+  衝突は audit が検出する（§14）。
 - **DL-NN は root product が所有し、全 product が準拠する**（§3）。package のコードから
   `@satisfies DL-NN` で参照してよい。これは**準拠であって依存ではない**（§2）。
 
@@ -204,7 +204,7 @@ package はこれらを**参照するが所有しない**（package ごとに視
 | レイヤー | readiness が測るもの | 単位 | 格納先（frontmatter） |
 |---|---|---|---|
 | spec | 実装/設計 Agent が**追加の設計対話なし**に着手できるか。**package なら「app を知らずに作れるか」も含む**（§2） | feature | `docs/specs/features/<name>.md` の `progress` |
-| design | 実装 Agent が**追加の技術判断なし**にコードを書けるか。**UI があれば「追加の視覚判断なし」に画面を組めるかも含む**（design-language が揃い、モックのある画面はモックと UX-NN が揃っているか） | 成果物ごと | `stack.md` / `data-model.md` /（root のみ）`conventions.md`・`design-language.md` の `progress` |
+| design | 実装 Agent が**追加の技術判断なし**にコードを書けるか。**UI があれば「追加の視覚判断なし」に画面を組めるかも含む**（design-language が揃い、取り込んだ出典が AC / DL に振り分け済みか） | 成果物ごと | `stack.md` / `data-model.md` /（root のみ）`conventions.md`・`design-language.md` の `progress` |
 | build | その feature の**全受入条件のテストが緑**か | feature | `docs/specs/features/<name>.md` の `build_progress` |
 
 **readiness は product ごとに閉じて測る。** ある package の readiness に他 product の未決を持ち込まない
@@ -255,8 +255,8 @@ feature 1個分しか中身がなく、器だけが増える。
 
 1. **status** — 「今どんな感じ?」「進捗」系、または `status` で始まる → 盤面表示（**編集しない**）
 2. **next** — 「次どこ?」「何から?」系、または `next` → 次の一手提案（**編集しない**）
-3. **review** — 「これでいい?」「見て」「レビュー」系、または `review` → sub-agent 委譲で客観判定（**編集しない**、§13）
-4. **audit** — 「ズレてない?」「乖離」「同期できてる?」系、または `audit` → ドリフト監査（**編集しない**、§8・§13）
+3. **review** — 「これでいい?」「見て」「レビュー」系、または `review` → sub-agent 委譲で客観判定（**編集しない**、§14）
+4. **audit** — 「ズレてない?」「乖離」「同期できてる?」系、または `audit` → ドリフト監査（**編集しない**、§8・§14）
 5. **軽量修正** — 既存成果物への一点修正依頼のうち、**§4 の安定 ID を増減しないもの** →
    即時反映（サマリ省略、§8）。**ID の増減を伴うものはこのモードで処理せず `/pj:change` に送る**
    （ここを緩めると ID の無い受入条件・原則が生まれ、§4 の鎖が機械検証できなくなる）。
@@ -264,7 +264,7 @@ feature 1個分しか中身がなく、器だけが増える。
 6. **対話（既定）** — 上のどれでもない → サマリ → 会話で詰める
 
 > 次フェーズへは**専用の受け渡し成果物（handoff）を作らない**。各 skill（特に build）は spec/design を直読みする。
-> 既存物の修正は層を意識せず **`/pj:change`**（§15）に投げてよい。
+> 既存物の修正は層を意識せず **`/pj:change`**（§16）に投げてよい。
 
 各モードのレイヤー別の具体（status が何を出すか等）は各 SKILL.md が定義する。共通の作法:
 - status/next/review/audit は**読むだけ。成果物を編集しない**
@@ -285,11 +285,11 @@ feature 1個分しか中身がなく、器だけが増える。
 1. **実装中に仕様の誤りに気づく** → build で勝手に辻褄を合わせず、**`/pj:change <気づいたこと>`** に投げる
    （L2 と判定され spec が正レイヤーになる）→ 受入条件が変われば AC を採番し test→code を辿って直す。
 2. **仕様変更要求** → spec→design→build を**増分**で流す。greenfield ではなく差分として扱う。
-3. **定期 or 不安なとき** → `audit` モードで **drift-auditor**（§13）が
+3. **定期 or 不安なとき** → `audit` モードで **drift-auditor**（§14）が
    `code ↔ 受入条件 ↔ design` の食い違いを検出・報告する。
 
 **軽量修正モードの手順（全レイヤー共通）**:
-0. **スコープ判定**: その修正が **§4 の安定 ID**（受入条件・デザイン原則・モックの挙動 …）を
+0. **スコープ判定**: その修正が **§4 の安定 ID**（受入条件・デザイン原則 …）を
    **増やす/廃止する**なら、ここで処理せず「これは ID の増減を伴うので `/pj:change` で入れます」と
    告げて `/pj:change` に渡す（§7 モード5）。
 1. 該当ファイルを特定（不明なら一言で確認）
@@ -331,13 +331,13 @@ feature 1個分しか中身がなく、器だけが増える。
 - 全体進捗は各軸の平均をバー表記。build readiness 5 = その feature の全受入条件テストが緑。
 - **進捗の正は下段1箇所**。上段は一覧性のためだけに存在する。overview の「コア機能」「product 一覧」は
   **何があるか**だけを持ち、完了状態（チェックボックス等）は**持たない**。同じ事実を2箇所に持つと必ずズレるため。
-- 上段の「依存」列は §2 の依存グラフ。**`package → app` の行が現れたら違反**（audit が拾う・§13）。
+- 上段の「依存」列は §2 の依存グラフ。**`package → app` の行が現れたら違反**（audit が拾う・§14）。
 
 ## 10. glossary — product ごとの用語辞書（全レイヤー共通）
 
 **glossary は product ごとに持つ。** `docs/specs/glossary.md` がその product の**用語の正**。
 spec の本文だけでなく、**design のスキーマ名・コードの識別子も同じ語に従う**。曖昧/衝突/恣意的な名前は
-**terminologist**（§13）で横断監査し、canonical 用語に寄せる。用語の一意性は実装の誤りを防ぐ最重要要素。
+**terminologist**（§14）で横断監査し、canonical 用語に寄せる。用語の一意性は実装の誤りを防ぐ最重要要素。
 
 **なぜ1つにまとめないか（product モデルの肝）**: 1ファイルだと app 固有の語と package の語が
 同じ場所に並び、**どちらの責務の語かが判別できなくなる**。product ごとに分けると、
@@ -346,7 +346,7 @@ spec の本文だけでなく、**design のスキーマ名・コードの識別
 - **root product の glossary** — その app 固有の語（制度・業務の運用に固有のもの）
 - **package product の glossary** — その package の責務の語彙
   （workflow なら 申請・承認・差し戻し。評価ライブラリなら 評価・評価定義）
-- **package が自分の glossary に定義していない概念語を spec 本文で使っていたら要調査**（§13）。
+- **package が自分の glossary に定義していない概念語を spec 本文で使っていたら要調査**（§14）。
   root の glossary から借りているなら、app の語彙を使っている疑いが濃い。
   **自分の責務の語なら、自分の glossary に定義すればよい**（§2 —— 語彙を持つこと自体は違反ではない）。
 - 同じ語が複数 product に現れること自体は問題ない（各 product 内で一意なら可）。
@@ -359,16 +359,47 @@ UI の正は本ファイルではなく **`_shared/visual.md`** が持つ（こ�
 | 節 | 内容 |
 |---|---|
 | **`visual.md` §V1** | **design-language** — 全画面共通の視覚の正（DL-NN）＋ デザインシステムの3スロット契約 |
-| **`visual.md` §V2** | **モック** — こだわりの強い画面の体験の正（UX-NN）。忠実再現の運用・置き場・採番の絞り方 |
+| **`visual.md` §V2** | **intake** — 外部の設計成果物の取り込み。忠実度（fidelity）・正/出典/参考の3分類・AC と DL への振り分け |
 
 - **読むのは UI に触れる skill だけ**: `/pj:setup`（DS 導入）・`/pj:design`・`/pj:build`（UI 実装時）・
   `/pj:change`（UI に触れる変更時）。**`/pj:spec` は読まない**（WHAT に視覚は含まれない）。
 - **CLI 等 UI の無いプロジェクトでは誰も読まない。**
-- ID 規約（DL-NN / UX-NN）の正は本ファイルの **§4**（visual.md 側には書かない）。
-- **design-language と mocks は root product が所有し、UI を持つ package もそれに準拠する**（§3・§12）。
-  package ごとに視覚の正を持たない（DS が割れる）。UX-NN はモックのある画面を持つ product 側に付く。
+- ID 規約（DL-NN）の正は本ファイルの **§4**（visual.md 側には書かない）。
+- **design-language は root product が所有し、UI を持つ package もそれに準拠する**（§3・§13）。
+  package ごとに視覚の正を持たない（DS が割れる）。**`intake/` は取り込んだ product 側が持つ。**
 
-## 12. 作法（conventions）— repo 全体にかかるルール
+## 12. 成果物の3分類と置き場（product の中の話）
+
+**§2 が「どの product か」を決め、ここが「その product の中のどこか」を決める。**
+新しいコードを書くとき、**置き場が決まっていないものを作らない**ための分類。
+
+| 分類 | 何を決めるか | 正のレイヤー | ID | 判定 |
+|---|---|---|---|---|
+| **挙動** | ルール・状態・不変条件・数値。**見た目なしでテストが書ける** | spec | `AC-NN` | テストできるか |
+| **見た目** | トークン・原則・部品の語彙 | design | `DL-NN` | 全画面に効くか |
+| **まとめる** | 配線・注入・ページ組み立て・アダプタ | design（作法） | **無し** | 上2つを繋ぐだけか |
+
+- **「まとめる」に ID が無いのが要**。ここは自分で決めることが無く、上2つを繋ぐだけ。
+  **新しい判断が生まれたら、それは挙動か見た目のどちらかに属するはず**——という検査になる。
+- **判定は「テストできるか」1つ。** 数値だから見た目、ではない。「行高 39px」は検証できるので挙動、
+  「影を使わない」は全画面に効くので見た目。
+- 良い設計は自然にこの形になる。例:
+  `src/core/`（挙動・見た目なしでテストできる）／ `src/parts/`（見た目）／ 組み立て役の1ファイル（まとめる）。
+
+### 置き場は conventions が持ち、build は引くだけ
+
+**具体的なディレクトリの表は root の `docs/design/conventions.md` が持つ**（§13）。
+pj はディレクトリ名を規定しない（repo と FW で違う）。**規定するのは次の3つ**:
+
+1. **conventions に「配置の表」が必ずある。** 3分類それぞれの置き場が書かれている
+2. **build は表を引くだけ。新しいトップレベルの箱を作らない。**
+   表に無いものが要ると気づいたら、その場で作らず **`/pj:change`** に投げる（§9・§16）
+3. **package の中身も同じ分類で組む。** 「別リポジトリに install してそのまま動くか」で検証する（§2）
+
+> **これを怠ると何が起きるか（実例）**: package を app に差し込むアダプタの置き場が表に無く、
+> build がその場で `src/<適当な名前>/` を2つ新設した。表に無いものを作らない規律だけで防げる。
+
+## 13. 作法（conventions）— repo 全体にかかるルール
 
 **作法は product ではなく、repo 全体にかかるルール**（§2 の「準拠」）。置き場は
 **root product の `docs/design/conventions.md` ただ1つ**。全 product がこれに従う。
@@ -382,14 +413,14 @@ UI の正は本ファイルではなく **`_shared/visual.md`** が持つ（こ�
 - 作法に従うことは**依存ではない**。package を切り出すときは、baked-in の設計判断として
   その package の `docs/design/` に写して連れて行く。
 
-## 13. sub-agent 委譲（トークン重い読み込みはメインを汚さない）
+## 14. sub-agent 委譲（トークン重い読み込みはメインを汚さない）
 
 | agent | 役割 | 呼ばれるモード |
 |---|---|---|
 | `pj:readiness-reviewer` | 「次フェーズが追加対話なしに進める水準か」を批判的に判定（spec/design 両対応）。**package なら「app を知らずに作れるか」も判定** | review |
 | `pj:terminologist` | 用語・命名の一貫性を全レイヤーで監査し canonical 案を返す。**product 境界をまたぐ語彙混入も検出** | spec の用語整理 / audit |
-| `pj:drift-auditor` | 鎖（受入条件 ↔ test ↔ code / design ↔ 実装 / DL-NN・UX-NN ↔ 実装）の切れ目＋**product 境界の違反**を検出 | audit |
-| `pj:design-reviewer` | UI が design-language（視覚の正・visual.md §V1）とモック（体験の正・visual.md §V2）に従うかを DL-NN / UX-NN・file:line つきで監査 | review / audit（UI 対象時） |
+| `pj:drift-auditor` | 鎖（受入条件 ↔ test ↔ code / design ↔ 実装 / DL-NN ↔ 実装）の切れ目＋**product 境界の違反**を検出 | audit |
+| `pj:design-reviewer` | UI が design-language（視覚の正・§V1）と取り込んだ出典（§V2）に従うかを DL-NN・file:line つきで監査 | review / audit（UI 対象時） |
 
 委譲の作法: sub-agent を起動し、**対象（docs パス / 特定 feature）とレイヤー**を渡す。返ってきた結果は
 **丸投げせず要点を整理**してユーザーに伝える（重大な指摘を先頭に）。review/audit 自体では**編集しない**。
@@ -404,11 +435,11 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
 - 対象: **対象 product のトライアド**＝その product の `docs/specs/` ＋ `docs/design/` ＋ `src/`
   （呼び出し元の層に関わらず常に3点セット。spec だけ・design だけを渡すと、鎖の切れ目が対象外に落ちて
   検出漏れになる）。**加えて root の `docs/design/conventions.md` と `design-language.md`**
-  （全 product が準拠する作法・§12）を読ませる。
+  （全 product が準拠する作法・§13）を読ませる。
 - **product の絞り込み**: 明示されなければ**全 product を順に**監査する。`packages/<name>` や
   product 名が渡されたらそれだけに絞る。
 - 観点A（鎖）: **§4 の全 ID の鎖**（`受入条件 ↔ test ↔ code` / `DL-NN ↔ コンポーネント` /
-  `UX-NN ↔ 実装`）＋ `design 決定 ↔ 実装・スキーマ`。**ID が増えたら鎖も増える**（列挙を正にしない）
+  ）＋ `design 決定 ↔ 実装・スキーマ`。**ID が増えたら鎖も増える**（列挙を正にしない）
 - 観点B（**product 境界**・product モデル固有）: §2 の向きが破れていないか。
   - `package → app / 他 feature` の **import・`[[リンク]]`・spec からの参照**
   - **app 固有の語彙の混入** — package の spec が、**自分の glossary に定義していない概念語**を
@@ -418,12 +449,12 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
   - **package 間の循環**、`packages/*/package.json` に app 依存が書かれていないか
   - **feature 名の product またぎ衝突**（§4）
   - root の作法（conventions）に**準拠していない** product
-- UI の視覚違反・**モックとの構成の乖離**を深掘りするときのみ **`pj:design-reviewer`** を併用する
+- UI の視覚違反・**取り込んだ出典との乖離**を深掘りするときのみ **`pj:design-reviewer`** を併用する
 - 特定 feature に絞りたいときは対象はトライアドのまま、**スコープとして feature 名を渡す**
 - 結果は要点整理して報告し、**編集しない**（直すのは `/pj:change`）。
   **観点B の違反は観点A より先に報告する**（境界が壊れていると鎖の議論が意味を失うため）
 
-## 14. やってはいけないこと（全レイヤー共通）
+## 15. やってはいけないこと（全レイヤー共通）
 
 - 決まったテンプレ質問を機械的に上から順に投げる（文脈に応じて必要な質問だけ出す）
 - ユーザーが「保留」と言った論点を蒸し返す（`open_questions` に積んで先に進む）
@@ -439,12 +470,12 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
 - **package から app / 他 feature を参照する**（import・`[[リンク]]`・spec からの言及。向きが壊れる）
 - **package の spec / glossary に app 固有の語彙を持ち込む**（§10）。
   ただし**自分の責務の語彙を持つのは違反ではない**——「業務語彙だから」で機械的に弾かない（§2）
-- **「全 package 共通の◯◯」を app の spec に書く**（作法は root の `conventions.md`・§12）
+- **「全 package 共通の◯◯」を app の spec に書く**（作法は root の `conventions.md`・§13）
 - **上段ダッシュボード（product 表）を手で動かす**（下段が正・上段は導出・§9）
 - **先回りして `features/` に割る**（小さい product は overview 1枚でよい・§6）
 - **package を切り出しやすくするためだけに AC ID を振り直す**（ID は不変・§4）
 
-## 15. 変更の高度トリアージ（`/pj:change` の中身）
+## 16. 変更の高度トリアージ（`/pj:change` の中身）
 
 `/pj:change <やりたいこと>` は開発者の日常入口（§8）。依頼と現在の docs/code/test を読み、**変更の「高度」を
 判定して正しいレイヤーから直し、トレースの鎖を下流まで伝播させる**。開発者は層を意識しない。
@@ -470,25 +501,25 @@ build の review は専用 agent でなく既存の `/code-review` `/security-re
 | **L3** 技術/構造変更 | WHAT 不変・HOW が変わる | 実装方式・スキーマ・ライブラリ変更 | **design → build** | design |
 | **L4** 根本 | spec も design も | コンセプト転換 | **spec → design → build を増分で** | 両方 |
 
-> **モックの差し替え（リモック）は既定 L3**（体験＝HOW が変わる・WHAT は不変）。実装を見て気に入らず
-> モックを作り直したときは `/pj:design mock` が扱う。**AC の増減を伴うと分かった時点で L2 に上げ**、
-> spec から直す（visual.md §V2 / `/pj:design mock` の「差し替え」）。
+> **取り込んだ出典の差し替えは既定 L3**（HOW が変わる・WHAT は不変）。実装を見て気に入らず
+> 出典を作り直したときは `/pj:design intake` が扱う。**AC の増減を伴うと分かった時点で L2 に上げ**、
+> spec から直す（visual.md §V2 / `/pj:design intake` の「差し替え」）。
 
 > **L0 コスメであっても design-language（DL-NN・visual.md §V1）に準拠する**。色・余白・文言・コンポーネント選択も視覚の正の範囲内で。
 
 **secured 担保（誤った高度での処理を防ぐ）**:
 - **L0/L1 は即実行**。**L2〜L4 は「どの層をどう変え・どこまで伝播するか」を一行確認してから**動く（黙って深い手術をしない）。
-- **誤レイヤーでの辻褄合わせを禁止**（§14）。振る舞い/設計の変更を code だけにパッチしない＝ドリフトを作らない。
+- **誤レイヤーでの辻褄合わせを禁止**（§15）。振る舞い/設計の変更を code だけにパッチしない＝ドリフトを作らない。
   必ず正レイヤーに上げ、`受入条件 ↔ test ↔ code` / `design ↔ code` の鎖を辿って下流まで反映する。
 - **受入条件の増減には安定 ID を自動採番**（規約は §4。**AC-NN は `/pj:change` が唯一の採番者**）。対応する
   test を同じ ID で追従させ、最後に grep で「全 AC にテストあり」を機械検証する。
-- **受動の入口も同じ**: 「もう code を直した」「ズレてる気がする」は、まず `audit`（drift-auditor §13）で
+- **受動の入口も同じ**: 「もう code を直した」「ズレてる気がする」は、まず `audit`（drift-auditor §14）で
   鎖の切れ目を検出 → 切れていれば正レイヤーに反映して埋める（code だけ進んで docs が遅れた状態を解消）。
 - 完了基準は build と同じ（触れた feature の**全受入条件テストが緑**）。触れた docs は `updated` と変更履歴を同期（§8）。
 
 迷ったら高度を1つ上げて確認する（浅く済ませて取りこぼすより、正レイヤーに上げる方が安全）。
 
-## 16. プロジェクトへの運用宣言（managed block）
+## 17. プロジェクトへの運用宣言（managed block）
 
 pj で運用するプロジェクトは、**ルート `CLAUDE.md`（毎セッション常時ロード）に「このプロジェクトは pj で回す」運用宣言を
 持つ**。`concepts.md` 等のプラグイン内部文書は skill 実行中しか読まれないため、宣言が無いと**普通のセッションや

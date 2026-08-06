@@ -19,12 +19,12 @@ pj の単位は **product**（app も package も product）。`packages/<name>/
 - app 固有の語彙・app の存在を前提にした記述が残っていたら、それは **readiness を上げられない理由**。
   ただし**その package の責務の語彙は持ってよい**（concepts §2）。判定は「別の app がそのまま使えるか」。
   「別リポジトリに切り出したらこの spec は自己完結しているか」で判定する。
-- **root 所有物を package が抱えていないか**: `conventions.md` / `design-language.md` / `mocks/` は
-  root product が所有し、package は**準拠するだけ**（concepts §3・§12）。package 側に生えていたら指摘する。
+- **root 所有物を package が抱えていないか**: `conventions.md` / `design-language.md` は
+  root product が所有し、package は**準拠するだけ**（concepts §3・§13）。package 側に生えていたら指摘する。
 - **readiness は product ごとに閉じて測る**（concepts §5）。他 product の未決を理由に下げない。
   package の design 確定度に root 所有ファイルの `progress` を混ぜない。
 - 逆に **app（root）を見るとき**は、「**全 package 共通の作法が spec に書かれていないか**」を見る。
-  それはレイヤー違反であり、かつ `package → app` の向きを作る（concepts §12）。
+  それはレイヤー違反であり、かつ `package → app` の向きを作る（concepts §13）。
 
 ## 大前提（判断軸）
 
@@ -35,17 +35,17 @@ pj の単位は **product**（app も package も product）。`packages/<name>/
   design 側で勝手に変えていたら「レイヤー違反」として指摘する（WHAT は spec が正）。
   UI を持つプロジェクトでは、実装 Agent が**追加の視覚判断なし**に画面を組める水準かも判定する:
   - `design-language.md`（視覚の正）— 原則が検証可能か・コンポーネント語彙が一意か。
-  - `docs/design/mocks/` — **こだわりの強い画面にモックがあるか**。spec が「最も作り込む」と宣言している
-    画面や、テキストに落とすと失われるインタラクションを持つ画面にモックが無ければ「**視覚判断が実装に
-    丸投げされている**」として指摘する（モックが無いのが普通の画面まで要求しないこと）。
-  - モックがある画面は `mock.md` に **UX-NN が採番され、各 ID に `index.html:<line>` の根拠がある**か。
-    モックだけあって UX-NN が空なら、挙動が落ちても検出できないので readiness は 4-5 にしない。
+  - `docs/design/intake/` — **取り込んだ出典が AC / DL に振り分け終わっているか**。spec が「最も作り込む」と宣言している
+    画面や、テキストに落とすと失われるインタラクションを持つ画面に**出典も DL も無ければ**
+    「**視覚判断が実装に丸投げされている**」として指摘する（取り込みが無いのが普通の画面まで要求しないこと）。
+  - 取り込みがあるなら `intake.md` に **忠実度が宣言され、振り分け表が埋まっている**か。
+    出典だけあって振り分けが空なら、何が拘束なのか決まっていないので readiness は 4-5 にしない。
 
 ## やること
 
 1. 対象パス配下を**すべて**読む（パスは**対象 product 相対**）。spec なら `docs/specs/`
    （overview / features / glossary。小さい product では overview 1枚に受入条件ごと畳まれている・concepts §6）。
-   design なら `docs/design/`（stack / data-model / adr ／ root なら conventions・design-language・mocks）
+   design なら `docs/design/`（stack / data-model / adr / intake ／ root なら conventions・design-language）
    ＋ 上流の `docs/specs/` も読んで整合を見る。
    **package を見るときは root の `conventions.md`・`design-language.md`・`glossary.md` も読む**
    （準拠できているか／app 固有語彙が混入していないかの照合に要る）。
