@@ -1,13 +1,28 @@
 ---
 name: spec
-description: pj パイプラインの WHAT レイヤー。ソフトウェア要件定義を対話で詰める。サマリ・じっくり対話・軽量修正・next・review（sub-agent委譲）・用語整理・audit を文脈で切り替える。既存物の修正は /pj:change が入口。
-disable-model-invocation: true
+description: pj パイプラインの WHAT レイヤー。ソフトウェア要件定義を対話で詰める。サマリ・じっくり対話・軽量修正・next・review（sub-agent委譲）・用語整理・audit を文脈で切り替える。既存物の修正は /pj:change が入口。pj 運用宣言（CLAUDE.md の pj:managed ブロック）を持つ repo でのみ使う。
 argument-hint: "[status|next|review|glossary|audit|<修正依頼 or feature名>]"
 ---
 
 仕様書を一緒に育てるコマンド。プロジェクトの `docs/specs/` 配下の md をユーザーと協働で編集する。
 
 引数: $ARGUMENTS
+
+## モデル起動時のゲート（`/pj:spec` と打たれた起動では読み飛ばす）
+
+ユーザーが明示的に `/pj:spec ...` と入力して起動したなら、この節は**丸ごと無視**して次へ進む。
+**モデル（Claude）の判断でこの skill を起動したときだけ**、下を上から順に通る。
+**`concepts.md` を読みに行くのはゲートを通過してから**（降りる判断をトークンを使う前に終わらせる）。
+
+1. **pj 運用の repo か確かめる** — ルート `CLAUDE.md` に `<!-- pj:managed start` があるか grep する（§17 の管理ブロック）。
+   **無ければ即座にこの skill を降りる。** 何も読まず何も書かず、「この repo は pj 運用ではないので通常どおり進めます」と
+   一行だけ言って通常の応答に戻る。
+2. **モードを判定する（§7）** — **status / next / review / audit** のいずれかなら成果物を編集しないので**承認は要らない**。
+   そのまま進む（§17 の stamp もしない）。
+3. **編集系なら承認を取る** — 対話・軽量修正・glossary など**成果物を書き換えるモードに入るなら**、
+   `concepts.md` を読む前に AskUserQuestion で一行確認する。提示するのは
+   「**対象 product** ／ 触るレイヤー（spec）／ **何を変えるか**」を1文にまとめたもの。
+4. **承認が得られなければ何も書かずに降りる** — 代案を押し売りしない。
 
 ## 最初に必ず読む
 

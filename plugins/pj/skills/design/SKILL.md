@@ -1,13 +1,28 @@
 ---
 name: design
-description: pj パイプラインの HOW レイヤー。spec（WHAT）を技術設計に落とす。スタック選定・具体データモデル・横断規約・ADR・デザイン言語（DL-NN）を対話で確定する。intake モードで外部の設計成果物（Artifact・ハンドオフ・スクショ）を取り込み、忠実度を宣言して AC / DL に振り分ける。status・next・review・audit を文脈で切り替える。既存物の修正は /pj:change が入口。
-disable-model-invocation: true
+description: pj パイプラインの HOW レイヤー。spec（WHAT）を技術設計に落とす。スタック選定・具体データモデル・横断規約・ADR・デザイン言語（DL-NN）を対話で確定する。intake モードで外部の設計成果物（Artifact・ハンドオフ・スクショ）を取り込み、忠実度を宣言して AC / DL に振り分ける。status・next・review・audit を文脈で切り替える。既存物の修正は /pj:change が入口。pj 運用宣言（CLAUDE.md の pj:managed ブロック）を持つ repo でのみ使う。
 argument-hint: "[status|next|review|audit|intake <パス>|<決定事項 or 論点>]"
 ---
 
 spec を実装可能な技術設計に落とすコマンド。`docs/design/` をユーザーと協働で編集する。
 
 引数: $ARGUMENTS
+
+## モデル起動時のゲート（`/pj:design` と打たれた起動では読み飛ばす）
+
+ユーザーが明示的に `/pj:design ...` と入力して起動したなら、この節は**丸ごと無視**して次へ進む。
+**モデル（Claude）の判断でこの skill を起動したときだけ**、下を上から順に通る。
+**`concepts.md` / `visual.md` を読みに行くのはゲートを通過してから**（降りる判断をトークンを使う前に終わらせる）。
+
+1. **pj 運用の repo か確かめる** — ルート `CLAUDE.md` に `<!-- pj:managed start` があるか grep する（§17 の管理ブロック）。
+   **無ければ即座にこの skill を降りる。** 何も読まず何も書かず、「この repo は pj 運用ではないので通常どおり進めます」と
+   一行だけ言って通常の応答に戻る。
+2. **モードを判定する（§7）** — **status / next / review / audit** のいずれかなら成果物を編集しないので**承認は要らない**。
+   そのまま進む（§17 の stamp もしない）。
+3. **編集系なら承認を取る** — 決定事項の対話・軽量修正・**intake** など**成果物を書き換えるモードに入るなら**、
+   `concepts.md` を読む前に AskUserQuestion で一行確認する。提示するのは
+   「**対象 product** ／ 触るレイヤー（design）／ **何を決める・取り込むか**」を1文にまとめたもの。
+4. **承認が得られなければ何も書かずに降りる** — 代案を押し売りしない。
 
 ## 最初に必ず読む
 
