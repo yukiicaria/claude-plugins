@@ -1,7 +1,6 @@
 ---
 name: setup
 description: pj パイプラインで「決めたことを実体にする」担当。新規プロジェクトの足回り（git/lint/format/husky）を一括で作り、ルート CLAUDE.md を pj-managed として生成し、デザインシステムを導入する。package <name> でライブラリの器を packages/ に生やし、stack で design が決めた技術（FW/DB/ORM/テストランナー）をインストールして配線し、sync で docs と実体のズレ（器の無い product・workspace 未登録・lint 未設定）を埋める。Day 0 だけでなく決定が起きるたびに呼ばれる。
-disable-model-invocation: true
 argument-hint: "[<なし=フル立ち上げ> | ds | package <name> | stack（design の決定を実体化） | sync（docs と実体のズレを埋める）]"
 allowed-tools: Bash(*), Write, Edit, Read, Glob
 ---
@@ -12,6 +11,27 @@ allowed-tools: Bash(*), Write, Edit, Read, Glob
 **フェーズではない。** spec / design / build に直交していて、**決定が起きるたびに呼ばれる**。
 
 引数: $ARGUMENTS
+
+## モデル起動時のゲート（`/pj:setup` と打たれた起動では読み飛ばす）
+
+ユーザーが明示的に `/pj:setup ...` と入力して起動したなら、この節は**丸ごと無視**して次へ進む。
+**モデル（Claude）の判断でこの skill を起動したときだけ**、下を通る。
+
+**モードで扱いを分ける。判定の軸はコストと不可逆性であって、好みではない:**
+
+| モード | モデル起動時 | 理由 |
+|---|---|---|
+| **`package <name>`** | **無確認で実行** | 器を生やすだけ。docs の決定（product が増えた）をそのまま実体に写す作業で、判断の余地が無い |
+| **`sync`** | **検出は無確認**。埋める前に一覧を報告する | 検出は読むだけ。埋めるのも既存の決定に追いつくだけ |
+| **`stack`** | **一行確認してから** | 依存を実際にインストールし、repo の骨組みを触る |
+| **`ds`** | **一行確認してから** | DS を install し、視覚の正（design-language §F）を宣言する |
+| **引数なし**（フル立ち上げ） | **一行確認してから** | git config・CLAUDE.md・DS まで一気に作る Day 0 の工程 |
+
+- 確認は AskUserQuestion で**1問だけ**。提示するのは「**対象 product ／ 何を入れるか ／ どこを触るか**」を1文にまとめたもの。
+- **承認が得られなければ何も書かずに降りる。** 代案を押し売りしない。
+- **`package` を無確認にしたのが、この skill をモデル起動可能にした主目的**——
+  「これは package だ」と気づくのは会話の途中で、そこに居るのはモデル。ここでコマンドを要求すると、
+  **docs だけ手で書かれて器が永久に生まれない**（concepts §1 の非対称）。
 
 ## 最初に必ず読む
 
