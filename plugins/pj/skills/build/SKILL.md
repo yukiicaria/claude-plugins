@@ -1,8 +1,8 @@
 ---
 name: build
-description: pj パイプラインの DOING レイヤー。spec（WHAT）と design（HOW）から、受入条件をテストに写してテスト先行で実装する。status・next・plan・review・audit を文脈で切り替える。完了は「全受入条件のテストが緑」で測る。
+description: pj パイプラインの DOING レイヤー。spec（WHAT）と design（HOW）から、受入条件をテストに写してテスト先行で実装する。対象は1つでも複数でもよく、複数なら依存層ごとに並列で回す（承認は最初の1回・詰まった product は blocked にして次へ）。status・next・plan・review・audit を文脈で切り替える。完了は「全受入条件のテストが緑」で測る。
 disable-model-invocation: true
-argument-hint: "[status|next|plan <feature>|review|audit|<feature名>]"
+argument-hint: "[status|next|plan <対象…>|review|audit|<feature名>|<product名…>|packages]"
 ---
 
 spec と design を実コードに落とすコマンド。テストファーストで feature を実装し、状態を overview に反映する。
@@ -16,6 +16,10 @@ spec と design を実コードに落とすコマンド。テストファース�
 **まず対象 product を決める**（concepts §2）。`docs/specs/overview.md` と
 `packages/*/docs/specs/overview.md` ＋ `packages/*/*/docs/specs/overview.md` を glob して product を列挙し、引数の feature 名がどの product の
 ものかで決める（同名 feature は repo 内で禁止なので一意に定まる・concepts §4）。**一行宣言してから動く。**
+
+**対象は1つとは限らない。** 引数に product 名が複数並ぶ・`packages` のような範囲キーワードが来たら
+「まとめて build」（下記）に入る。そのときも product ごとの中身は既定 build と同じで、
+**下の「読む」対象も対象 product ごとに読み直す**（1本目の design を2本目に流用しない）。
 
 build は spec・design の**下流**。実装に入る前に必ず両方を読む（パスは**対象 product 相対**）:
 - `docs/specs/`（WHAT — 特に対象 feature の受入条件）
@@ -100,6 +104,46 @@ feature 名が無ければ next の結果から「どれを実装します?」�
    - feature.md の `## 変更履歴` に `YYYY-MM-DD: 実装（受入条件 N 件テスト緑）` を追記、`updated` を今日に
 7. コミット・push は**ユーザーが明示するまでしない**（プロジェクトの CLAUDE.md 準拠）。
 
+### まとめて build（`/pj:build <A> <B> …` / `/pj:build packages`）
+
+対象が**複数**のときのモード。**やることは上の既定 build と同じ**で、それを対象ごとに繰り返すだけ。
+新しい実装作法も新しい足切り基準も作らない（**判断は next と上の前提チェックが既に持っている**）。
+
+**対象の決め方**:
+- **product 名を並べて打たれたら**それが対象（`/pj:build user-group access-control valid-period`）。
+- **`packages` / `all` のような範囲キーワード**なら、**next の優先順位そのまま**
+  （依存順 × spec readiness）で対象を並べる。ここで独自の閾値を発明しない。
+- **層に割る**。層は **root `docs/specs/overview.md` の products 表の「依存」列**から引く
+  （宣言＝あるべき姿なので、まだ実装の無い package も層に割れる）。
+  `docs/design/dependencies.md` は**実体からの生成物なので使わない**（未実装分が落ちる）。
+
+**承認は最初の1回だけ**（このモードの本体）。開始前に「層 → 対象 → 本数」を一覧で出して確認を取る。
+**通ったら以降は product ごとに聞かない。** 最後の報告まで走り切る。
+
+**実行**: 同じ層の product は **1 product = 1 sub-agent で並列**。各 sub-agent は
+「その product の未緑 feature を、上の既定 build 手順 1〜7 で緑にする」だけを負う。
+メインは要約（緑本数・blocked とその理由）だけ受け取る（concepts §14）。
+
+**書き込み境界（並列で壊さないための線）**:
+- sub-agent が書いてよいのは **`packages/<name>/` 配下だけ**（`src/` ・その product の `docs/` ・`package.json`）。
+- **root の `docs/specs/overview.md` の products 表・ルートの workspace 設定・lockfile は触らせない。**
+  products 表の引き直しは**全層が終わってからメインが1回**やる（concepts §9 上段は導出）。
+  依存インストールが要るなら、**層を跨ぐ前にメインがまとめて実行**する。
+
+**詰まっても止めない**: 前提チェックの欠け（spec が薄い・土台が無い）／受入条件が design と矛盾する／
+テストが緑にならない のいずれかに当たったら、その product を **blocked** として記録して**次へ進む**。
+**バッチ中に `/pj:change` や `/pj:setup` を起動しない**（対話が要るので必ずそこで止まってしまう）。
+blocked の product は**緑でないものを緑と記録しない**。書きかけは**落ちるテストごとそのまま残し**、
+`build_progress` は実際のテスト緑率のまま置く（先へ進むために辻褄を合わせて上げない・concepts §15）。
+
+**報告**: 論点を最後まで溜めない（concepts §15）。**1本終わるたびに1行**出す
+（`[4/9] workflow/core … BLOCKED — wf-AC-07 の前提が design と矛盾`）。
+そのうえで最後に `緑 N 本 / blocked M 本` を集約し、blocked は1本ずつ**理由と次の一手**
+（どの skill に何を投げるか）を出す。**止まらないことと黙ることは別**。
+
+**plan**: `/pj:build plan packages` は**コードを書かず**、層割り・対象一覧・各 product の受入条件数・
+想定リスクだけ出す。数が多いときは先にこれを見てもらう。
+
 ### 軽量修正（実装中に仕様/設計の誤りに気づいたとき）
 build で勝手に辻褄を合わせない。**`/pj:change <気づいたこと>` に投げる**（concepts.md §8 典型シナリオ1）。
 どの層が正かの判定・AC の採番・鎖（受入条件 ↔ test ↔ code）の伝播は `/pj:change` が引き受けるので、
@@ -110,9 +154,10 @@ build 側で層を選び分けない。
 - next は次に実装すべき feature を提案。優先: **依存順（基盤が先）× spec readiness の高い順**。
   spec が 3 未満の feature は「先に /pj:spec で詰める」と促す。
 
-### plan（`/pj:build plan <feature>`）
+### plan（`/pj:build plan <feature>` / `plan <product…>` / `plan packages`）
 コードは書かず、上記「計画」までを出す（分解・依存順・受入条件→テスト一覧・想定リスク）。
 大きい feature は実装前にこれでレビューしてもらう。
+**対象が複数なら**「まとめて build」の層割り・対象一覧・各 product の受入条件数までを出す（実装しない）。
 
 ### review / audit
 - review はコード品質の確認。専用 agent を作らず**既存の `/code-review` `/security-review` `/verify`
