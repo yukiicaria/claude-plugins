@@ -40,7 +40,7 @@ pj の単位は **product**（app も package も product。concepts §2）。`d
   使っていないか（root の glossary と付き合わせる）。**語彙を持つこと自体は違反ではない**——
   判定は「別の app がそのまま使えるか」で、機械的に断定せず疑いとして報告する（concepts §2）
 - **package 間の循環依存**（依存は一方向のみ）
-- **可搬の破れ**（concepts §2）— **これは「app を知らない」とは別の境界**で、上の項目を
+- **可搬の破れ**（`_shared/product-model.md` §P2）— **これは「app を知らない」とは別の境界**で、上の項目を
   全部通っても落ちる。hoisting が隠すため、切り出すまで表面化しない:
   - **宣言漏れ** — `packages/*/src/**` が import しているのに `package.json` の
     dependencies / peerDependencies / devDependencies のどれにも無いもの。

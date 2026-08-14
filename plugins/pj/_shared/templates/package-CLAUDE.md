@@ -11,7 +11,7 @@
   ただし**この package の責務そのものの語彙は持ってよい**（組織図ライブラリが「組織」を知るように）。
   判定は「**別の app がこのまま使えるか**」。語彙の正はこの package 自身の `docs/specs/glossary.md`。
 - **依存は一方向のみ。** 他 package への依存は `package.json` に書いたものだけ。循環させない。
-- **足回りを root から借りない**（可搬 / pj concepts §2）。
+- **足回りを root から借りない**（可搬 / pj concepts §2・product-model.md §P2）。
   - `devDependencies` に**テストランナー・型定義を自分で書く**。
     「root にあるから動く」は通らない —— workspace の hoisting が隠しているだけで、
     切り出した瞬間に動かなくなる
