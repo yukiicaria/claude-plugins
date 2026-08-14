@@ -9,7 +9,7 @@
   "plugins": [
     {
       "name": "pj",
-      "description": "仕様駆動パイプライン: /pj:spec (WHAT) → /pj:design (HOW) → /pj:build (DOING)。readiness 軸・モード・glossary・保守規律を3フェーズで共通化する。",
+      "description": "仕様駆動パイプライン: /pj:setup (立ち上げ・器) → /pj:spec (WHAT) → /pj:design (HOW) → /pj:build (DOING)、修正は /pj:change 一本。readiness 軸・共通モード・安定 ID・glossary・保守規律を5スキルで共通化する。",
       "author": {
         "name": "yuki"
       },
