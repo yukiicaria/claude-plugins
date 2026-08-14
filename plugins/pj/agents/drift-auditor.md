@@ -40,6 +40,16 @@ pj の単位は **product**（app も package も product。concepts §2）。`d
   使っていないか（root の glossary と付き合わせる）。**語彙を持つこと自体は違反ではない**——
   判定は「別の app がそのまま使えるか」で、機械的に断定せず疑いとして報告する（concepts §2）
 - **package 間の循環依存**（依存は一方向のみ）
+- **可搬の破れ**（concepts §2）— **これは「app を知らない」とは別の境界**で、上の項目を
+  全部通っても落ちる。hoisting が隠すため、切り出すまで表面化しない:
+  - **宣言漏れ** — `packages/*/src/**` が import しているのに `package.json` の
+    dependencies / peerDependencies / devDependencies のどれにも無いもの。
+    **テストランナー・型定義・testing-library を特に見る**（root から借りていることが多い）
+  - **tsconfig の他人任せ** — root を extends していて、その extends 先に
+    app 固有設定（FW プラグイン・`paths`・`jsx`）が入っていないか
+  - **テスト設定が app を指す** — setup ファイル・config が package の外を参照していないか
+  - **script の欠落** — `type-check` と `test` が両方あるか（片方欠けると CI が素通りする）
+  - **peer にすべきものが dependencies に居ないか** — FW・DS ライブラリ
 - **feature 名の product またぎ衝突** — AC ID に product 名を含めないので、同名 feature があると
   `grep '<name>-AC-'` が別 product の鎖を拾って検証自体が壊れる（concepts §4）
 - **root 所有物の重複所有** — package 側に `conventions.md` / `design-language.md` が

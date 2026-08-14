@@ -208,7 +208,9 @@ UI を持たない（CLI 等）なら**スキップ**し、design-language は N
 packages/<name>/
   package.json          name は root の scope に合わせる（例 @<scope>/<name>）。
                         dependencies に **app を書かない**。依存する他 package だけを workspace 依存で書く
-  tsconfig.json         root の tsconfig を extends（rootDir: src / outDir: dist）
+                        **devDependencies にテストランナー・型定義を書く**（下記）
+  tsconfig.json         **自己完結させる**（app 固有設定を継承しない。下記）
+  <test>.config.ts      この package だけで走るテスト設定（setup ファイルが app を指さない）
   src/index.ts          公開 API の入口（空でよい）
   CLAUDE.md             ../../_shared/templates/package-CLAUDE.md から
   docs/
@@ -220,6 +222,18 @@ packages/<name>/
       CLAUDE.md         ../../_shared/templates/design-CLAUDE.md から
 ```
 
+**可搬（concepts §2）を最初から満たす。** 後から足すと、root に寄せた設定を1つずつ
+剥がす作業になる。しかも hoisting が不足を隠すので**壊れていても静かに壊れる**。
+
+- **`devDependencies` を必ず書く。** テストランナー（vitest 等）・型定義（`@types/node`）・
+  UI なら testing-library。**「root にあるから動く」は可搬の証明にならない。**
+  workspace の hoisting で解決できてしまうため、宣言漏れは切り出すまで表面化しない。
+- **tsconfig は自己完結させる。** root を extends するなら、**extends 先は app 固有設定を
+  含まない土台**（`tsconfig.base.json` 等）に限る。app の FW プラグイン（`plugins: [{name: "next"}]`）・
+  `paths` エイリアス・`jsx` 設定を package が継承していたら、それは外に出た瞬間に壊れる。
+  土台が無ければ**この package の tsconfig に必要な設定を直接書く**。
+- **`type-check` と `test` の script を両方書く。** 片方しか無いと CI が素通りする。
+- **FW・DS ライブラリは `peerDependencies`。** `dependencies` に入れると利用側と二重に入る。
 - **`docs/design/conventions.md` と `design-language.md` は作らない。** root 所有で、この package は
   **準拠する側**（concepts §3・§13）。`docs/design/CLAUDE.md` にその旨を1行書く。
 - **`docs/specs/features/` は作らない。** overview 1枚から始め、育ったら割る（concepts §6）。
